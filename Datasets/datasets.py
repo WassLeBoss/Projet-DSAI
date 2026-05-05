@@ -1,11 +1,3 @@
-from convokit import Corpus, download
-import shutil
-
-path = download("winning-args-corpus")
-print(path)
-
-shutil.copytree(
-    path,
-    r"C:\Users\Wess9\Desktop\ProjetDSAI\Projet-DSAI\Datasets\WinningArgCorpus",
-    dirs_exist_ok=True
-)
+version https://git-lfs.github.com/spec/v1
+oid sha256:468a270ab21f27ecb667a337c5f9e05e0d21e3f9da5234d5b6937e9d666592d2
+size 246
