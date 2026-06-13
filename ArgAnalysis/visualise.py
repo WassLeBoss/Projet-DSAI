@@ -7,8 +7,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 INCLUDE_OP = True
 CSV_PATH   = "/Users/tristanjin/Documents/TELECOM_PARIS/2A_COURS/SD/Projet-DSAI/Datasets/WinningArgCorpus/WAC.csv"
-ENCODER    = "features"  # "roberta", "w2v", "tfidf" ou "features"
-# ────────────────────────────────────────────
+ENCODER    = "roberta"  # "roberta", "w2v" ou "tfidf"
 
 data = pd.read_csv(CSV_PATH)
 data["input_text"] = (data["op_text"].fillna("") + " " + data["text"].fillna("")) if INCLUDE_OP else data["text"].fillna("")
@@ -30,20 +29,9 @@ elif ENCODER == "w2v":
 elif ENCODER == "tfidf":
     X = TfidfVectorizer(max_features=5000).fit_transform(texts).toarray()
 
-elif ENCODER == "features":
-    from sklearn.preprocessing import StandardScaler
-    from data_loader import load_pairs
-    from pairwise import build_pairwise_dataset, get_feature_names
 
-    pairs        = load_pairs(CSV_PATH)
-    X, y         = build_pairwise_dataset(pairs)
-    X            = StandardScaler().fit_transform(X)
-    feature_names = get_feature_names()
-
-
-reducer = PCA(n_components=2)
-coords  = reducer.fit_transform(X)
-title   = f"PCA  —  {ENCODER.upper()}"
+coords = PCA(n_components=2).fit_transform(X)
+title  = f"PCA  —  {ENCODER.upper()}"
 
 plt.figure(figsize=(8, 6))
 for label, color, name in [(1, "steelblue", "Succès"), (0, "tomato", "Échec")]:
