@@ -1,0 +1,8 @@
+# ── Best-of-N ────────────────────────────────────────────
+name: best_of_n
+
+# Nombre de candidats generes par OP
+n_candidates: 10
+
+# Si True, affiche tous les candidats et leurs scores
+verbose: false

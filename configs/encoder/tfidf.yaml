@@ -1,0 +1,7 @@
+# ── TF-IDF Encoder ──────────────────────────────────
+name: tfidf
+_target_: src.encoders.tfidf_encoder.TfidfEncoder
+
+max_features: 10000
+ngram_range: [1, 2]
+use_lemmatization: true

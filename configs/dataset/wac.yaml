@@ -1,0 +1,12 @@
+# ── WinningArgCorpus (Reddit CMV) ───────────────────
+name: wac
+csv_path: datasets/WinningArgCorpus/WAC.csv
+
+# Colonnes
+text_col: text
+op_col: op_text
+label_col: success
+
+# Split
+test_size: 0.2
+stratify: true

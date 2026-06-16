@@ -1,0 +1,6 @@
+# ── SVM Classifier ──────────────────────────────────
+name: svm
+_target_: src.models.svm_classifier.SVMClassifier
+
+kernel: linear
+class_weight: balanced

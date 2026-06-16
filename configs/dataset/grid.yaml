@@ -1,0 +1,11 @@
+# ── GriD — Détection de textes synthétiques ─────────
+name: grid
+csv_path: datasets/GriD/reddit_filtered_dataset.csv
+
+# Colonnes
+text_col: Data
+label_col: Labels
+
+# Split
+test_size: 0.2
+stratify: false

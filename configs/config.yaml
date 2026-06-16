@@ -1,0 +1,17 @@
+defaults:
+  - dataset: wac
+  - encoder: features
+  - model: svm
+  - _self_
+
+# ── Paramètres globaux ──────────────────────────────
+seed: 42
+include_op: true   # Concaténer op_text + text comme entrée
+
+# ── Hydra outputs ───────────────────────────────────
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${encoder.name}_${dataset.name}
+  sweep:
+    dir: outputs/multirun/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${encoder.name}_${dataset.name}

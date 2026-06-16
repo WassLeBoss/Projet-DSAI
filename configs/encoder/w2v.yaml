@@ -1,0 +1,9 @@
+# ── Word2Vec Encoder ────────────────────────────────
+name: w2v
+_target_: src.encoders.w2v_encoder.W2VEncoder
+
+vector_size: 100
+window: 5
+min_count: 1
+workers: 4
+use_lemmatization: true

@@ -1,0 +1,8 @@
+# ── RoBERTa Sentence Encoder ────────────────────────
+name: roberta
+_target_: src.encoders.roberta_encoder.RobertaEncoder
+
+model_name: all-roberta-large-v1
+batch_size: 32
+show_progress_bar: true
+normalize_embeddings: true

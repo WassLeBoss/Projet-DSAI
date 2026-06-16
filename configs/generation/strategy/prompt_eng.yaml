@@ -1,0 +1,12 @@
+# ── Prompt Engineering ───────────────────────────────────
+name: prompt_eng
+
+# Nombre de features Axe 1 les plus discriminantes a utiliser
+# pour construire les instructions du prompt
+top_k_features: 8
+
+# Best-of-N apres prompt engineering
+n_candidates: 5
+
+# Langue des instructions dans le prompt (en = anglais, conseille pour les LLMs)
+instruction_lang: en
