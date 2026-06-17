@@ -97,7 +97,7 @@ def main(cfg: DictConfig) -> None:
         encoder = _build_encoder(cfg)
         X_train, X_test = encoder.fit_transform(X_raw_train, X_raw_test)
 
-    log.info("Train : %d exemples | Test : %d exemples", len(X_train), len(X_test))
+    log.info("Train : %d exemples | Test : %d exemples", X_train.shape[0], X_test.shape[0])
 
     # ── Entraînement & Évaluation ────────────────────────────────────────────
     from src.models.svm_classifier import SVMClassifier
