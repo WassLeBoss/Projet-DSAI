@@ -122,3 +122,29 @@ def load_hc3(cfg: DictConfig) -> tuple[list[str], list[int]]:
                 labels.append(1)  # ChatGPT
 
     return texts, labels
+
+
+def load_m4gt(cfg: DictConfig) -> tuple[list[str], list[int]]:
+    """
+    Charge le dataset M4GT-Bench (SubtaskA.jsonl).
+
+    Retourne :
+        texts  : liste de strings
+        labels : liste de int (1 = machine, 0 = humain)
+    """
+    import json
+    texts, labels = [], []
+    max_samples = cfg.dataset.get("max_samples", None)
+    
+    with open(cfg.dataset.path, "r", encoding="utf-8") as f:
+        for i, line in enumerate(f):
+            if max_samples and i >= max_samples:
+                break
+            try:
+                data = json.loads(line)
+                texts.append(str(data[cfg.dataset.text_col]))
+                labels.append(int(data[cfg.dataset.label_col]))
+            except (json.JSONDecodeError, KeyError):
+                continue
+                
+    return texts, labels

@@ -74,6 +74,9 @@ def main(cfg: DictConfig) -> None:
         elif cfg.dataset.name == "hc3":
             from src.data.loader import load_hc3
             texts, labels = load_hc3(cfg)
+        elif cfg.dataset.name == "m4gt":
+            from src.data.loader import load_m4gt
+            texts, labels = load_m4gt(cfg)
         else:
             raise ValueError(f"Dataset inconnu : {cfg.dataset.name}")
 

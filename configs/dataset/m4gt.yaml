@@ -1,0 +1,12 @@
+# ── Dataset M4GT-Bench ──────────────────────────────────
+name: m4gt
+path: datasets/M4GT-Bench/SubtaskA.jsonl
+
+# Champs du JSONL
+text_col: text
+label_col: label
+
+# Split & echantillonnage
+test_size: 0.2
+stratify: true
+max_samples: 20000  # Limite pour eviter les problemes de RAM (500MB de JSONL par defaut)
