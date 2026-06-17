@@ -84,14 +84,24 @@ def main(cfg: DictConfig) -> None:
             stratify=labels if cfg.dataset.stratify else None,
         )
 
-        encoder = instantiate(cfg.encoder)
+        encoder = _build_encoder(cfg)
         X_train, X_test = encoder.fit_transform(texts_train, texts_test)
-        X = np.concatenate([X_train, X_test])
+        from scipy import sparse
+        if sparse.issparse(X_train):
+            X = sparse.vstack([X_train, X_test])
+        else:
+            X = np.concatenate([X_train, X_test])
         y = np.concatenate([y_train, y_test])
 
     # ── Réduction PCA 2D ─────────────────────────────────────────────────────
-    coords = PCA(n_components=2).fit_transform(X)
-    title  = f"PCA  —  {cfg.encoder.name.upper()}  |  {cfg.dataset.name.upper()}"
+    from scipy import sparse
+    if sparse.issparse(X):
+        from sklearn.decomposition import TruncatedSVD
+        coords = TruncatedSVD(n_components=2).fit_transform(X)
+        title  = f"SVD  —  {cfg.encoder.name.upper()}  |  {cfg.dataset.name.upper()}"
+    else:
+        coords = PCA(n_components=2).fit_transform(X)
+        title  = f"PCA  —  {cfg.encoder.name.upper()}  |  {cfg.dataset.name.upper()}"
 
     # ── Tracé ────────────────────────────────────────────────────────────────
     palette = {1: ("steelblue", "Positif / Succès"), 0: ("tomato", "Négatif / Échec")}
