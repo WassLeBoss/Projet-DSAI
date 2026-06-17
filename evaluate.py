@@ -93,15 +93,31 @@ def main(cfg: DictConfig) -> None:
             X = np.concatenate([X_train, X_test])
         y = np.concatenate([y_train, y_test])
 
-    # ── Réduction PCA 2D ─────────────────────────────────────────────────────
+    # ── Réduction t-SNE 2D ───────────────────────────────────────────────────
+    from sklearn.manifold import TSNE
+    
+    # Sous-échantillonnage pour t-SNE (très lent sur 60k points)
+    MAX_SAMPLES = 2000
+    if X.shape[0] > MAX_SAMPLES:
+        log.info("Sous-échantillonnage à %d points pour t-SNE...", MAX_SAMPLES)
+        indices = np.random.choice(X.shape[0], MAX_SAMPLES, replace=False)
+        X = X[indices]
+        y = y[indices]
+
     from scipy import sparse
     if sparse.issparse(X):
+        # SVD préalable recommandée avant t-SNE pour le texte
         from sklearn.decomposition import TruncatedSVD
-        coords = TruncatedSVD(n_components=2).fit_transform(X)
-        title  = f"SVD  —  {cfg.encoder.name.upper()}  |  {cfg.dataset.name.upper()}"
+        log.info("SVD préalable (50 dimensions)...")
+        X_reduced = TruncatedSVD(n_components=min(50, X.shape[1]-1)).fit_transform(X)
     else:
-        coords = PCA(n_components=2).fit_transform(X)
-        title  = f"PCA  —  {cfg.encoder.name.upper()}  |  {cfg.dataset.name.upper()}"
+        from sklearn.decomposition import PCA
+        log.info("PCA préalable (50 dimensions)...")
+        X_reduced = PCA(n_components=min(50, X.shape[1]-1)).fit_transform(X)
+
+    log.info("Calcul t-SNE en cours (peut prendre 10-30 sec)...")
+    coords = TSNE(n_components=2, perplexity=30, random_state=cfg.seed).fit_transform(X_reduced)
+    title  = f"t-SNE  —  {cfg.encoder.name.upper()}  |  {cfg.dataset.name.upper()}"
 
     # ── Tracé ────────────────────────────────────────────────────────────────
     palette = {1: ("steelblue", "Positif / Succès"), 0: ("tomato", "Négatif / Échec")}
