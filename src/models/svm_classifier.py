@@ -14,7 +14,7 @@ from pathlib import Path
 
 import numpy as np
 from omegaconf import DictConfig
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 from sklearn.metrics import classification_report, roc_auc_score
 
 log = logging.getLogger(__name__)
@@ -38,10 +38,17 @@ class SVMClassifier:
 
     def __init__(self, cfg: DictConfig) -> None:
         self.cfg = cfg
-        self._clf = SVC(
-            kernel=cfg.kernel,
-            class_weight=cfg.class_weight,
-        )
+        if cfg.kernel == "linear":
+            self._clf = LinearSVC(
+                class_weight=cfg.class_weight,
+                dual=False, # Recommandé quand n_samples > n_features
+                max_iter=5000
+            )
+        else:
+            self._clf = SVC(
+                kernel=cfg.kernel,
+                class_weight=cfg.class_weight,
+            )
 
     def train_and_evaluate(
         self,

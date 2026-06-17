@@ -39,16 +39,21 @@ class TfidfEncoder:
 
     def fit_transform(
         self, texts_train: list[str], texts_test: list[str]
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ):
         """
         Fit sur le train, transform train + test.
 
         Retourne :
-            X_train, X_test : arrays denses (n_samples, n_features)
+            X_train, X_test : matrices scipy.sparse (n_samples, n_features)
         """
         train_clean = self._preprocess(texts_train)
         test_clean  = self._preprocess(texts_test)
 
-        X_train = self._vectorizer.fit_transform(train_clean).toarray()
-        X_test  = self._vectorizer.transform(test_clean).toarray()
+        X_train = self._vectorizer.fit_transform(train_clean)
+        X_test  = self._vectorizer.transform(test_clean)
         return X_train, X_test
+
+    def transform(self, texts: list[str]):
+        """Encode de nouveaux textes (utilise pour la generation/evaluation)."""
+        clean = self._preprocess(texts)
+        return self._vectorizer.transform(clean)

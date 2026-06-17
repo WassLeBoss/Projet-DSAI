@@ -5,92 +5,116 @@ Generateur du PDF "Guide de demarrage" pour Projet-DSAI.
 
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
-import os
 
-# ── Palette de couleurs ──────────────────────────────────────────────────────
-BLACK      = (15,  15,  15)
-WHITE      = (255, 255, 255)
-ACCENT     = (67,  97,  238)    # bleu principal
-ACCENT2    = (114, 9,   183)    # violet
-SUCCESS    = (34,  197, 94)     # vert
-WARNING    = (234, 179, 8)      # jaune
-DARK_BG    = (30,  30,  46)     # fond fonce header
-LIGHT_BG   = (245, 247, 255)    # fond clair section
-CODE_BG    = (30,  30,  46)     # fond code
-CODE_FG    = (166, 226, 46)     # texte code (vert terminal)
-GRAY       = (100, 100, 120)
-DIVIDER    = (220, 220, 235)
+FONT_REGULAR = "C:/Windows/Fonts/arial.ttf"
+FONT_BOLD    = "C:/Windows/Fonts/arialbd.ttf"
+FONT_ITALIC  = "C:/Windows/Fonts/ariali.ttf"
+FONT_MONO    = "C:/Windows/Fonts/cour.ttf"
+FONT_MONO_B  = "C:/Windows/Fonts/courbd.ttf"
 
-AXE_COLORS = {
-    1: (67,  97,  238),    # Axe 1 = bleu
-    2: (114, 9,   183),    # Axe 2 = violet
-    3: (34,  197, 94),     # Axe 3 = vert
-}
+BLACK    = (15,  15,  15)
+WHITE    = (255, 255, 255)
+ACCENT   = (67,  97,  238)
+ACCENT2  = (114, 9,   183)
+SUCCESS  = (34,  197, 94)
+WARNING_COLOR = (200, 130, 0)
+DARK_BG  = (30,  30,  46)
+CODE_BG  = (30,  30,  46)
+CODE_FG  = (166, 226, 46)
+GRAY     = (100, 100, 120)
+
+AXE_COLORS = {1: ACCENT, 2: ACCENT2, 3: SUCCESS}
 
 
 class GuidePDF(FPDF):
 
+    def setup_fonts(self):
+        self.add_font("Sans",  "",  FONT_REGULAR)
+        self.add_font("Sans",  "B", FONT_BOLD)
+        self.add_font("Sans",  "I", FONT_ITALIC)
+        self.add_font("Mono",  "",  FONT_MONO)
+        self.add_font("Mono",  "B", FONT_MONO_B)
+
     def header(self):
-        pass  # header custom par page
+        pass
 
     def footer(self):
         self.set_y(-14)
-        self.set_font("Helvetica", "I", 8)
+        self.set_font("Sans", "I", 8)
         self.set_text_color(*GRAY)
-        self.cell(0, 10, f"Projet-DSAI — Guide de demarrage   |   Page {self.page_no()}", align="C")
+        self.cell(0, 10,
+                  f"Projet-DSAI - Guide de demarrage   |   Page {self.page_no()}",
+                  align="C")
+
+    # ── Composants UI ────────────────────────────────────────────────────────
 
     def cover_page(self):
-        # Fond sombre
         self.set_fill_color(*DARK_BG)
         self.rect(0, 0, 210, 297, "F")
 
-        # Bande coloree en haut
         self.set_fill_color(*ACCENT)
-        self.rect(0, 0, 210, 6, "F")
+        self.rect(0, 0, 210, 5, "F")
 
-        # Titre principal
-        self.set_y(60)
-        self.set_font("Helvetica", "B", 32)
+        self.set_y(55)
+        self.set_font("Sans", "B", 34)
         self.set_text_color(*WHITE)
         self.cell(0, 14, "PROJET-DSAI", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-        self.set_font("Helvetica", "", 16)
-        self.set_text_color(180, 180, 200)
-        self.cell(0, 10, "Guide de demarrage complet", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        self.set_font("Sans", "", 16)
+        self.set_text_color(180, 180, 210)
+        self.cell(0, 10, "Guide de demarrage complet", align="C",
+                  new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-        # Sous-titre
-        self.ln(6)
-        self.set_font("Helvetica", "", 12)
+        self.ln(5)
+        self.set_font("Sans", "I", 11)
         self.set_text_color(140, 140, 170)
-        self.cell(0, 8, "De zero a la generation d'arguments convaincants", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        self.cell(0, 8, "De zero a la generation d'arguments convaincants",
+                  align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-        # Axes badges
-        self.ln(20)
-        badge_labels = ["AXE 1 — Analyse", "AXE 2 — Detection", "AXE 3 — Generation"]
-        badge_colors = [ACCENT, ACCENT2, SUCCESS]
-        x_start = 25
-        for label, color in zip(badge_labels, badge_colors):
+        self.ln(18)
+        labels = ["AXE 1 - Analyse", "AXE 2 - Detection", "AXE 3 - Generation"]
+        colors = [ACCENT, ACCENT2, SUCCESS]
+        x = 24
+        for label, color in zip(labels, colors):
             self.set_fill_color(*color)
             self.set_text_color(*WHITE)
-            self.set_font("Helvetica", "B", 10)
-            self.set_xy(x_start, self.get_y())
-            self.cell(52, 10, label, align="C", fill=True, new_x=XPos.RIGHT)
-            x_start += 57
+            self.set_font("Sans", "B", 9)
+            self.set_xy(x, self.get_y())
+            self.cell(54, 10, label, align="C", fill=True, new_x=XPos.RIGHT)
+            x += 57
 
-        # Ligne d'info bas de page
-        self.set_y(250)
+        self.set_y(200)
+        self.set_font("Sans", "", 9)
+        self.set_text_color(130, 130, 160)
+        self.cell(0, 8,
+                  "Python 3.10+  |  PyTorch  |  scikit-learn  |  Hydra  |  HuggingFace",
+                  align="C")
+
+        self.set_y(245)
         self.set_fill_color(40, 40, 60)
-        self.rect(0, 248, 210, 30, "F")
-        self.set_font("Helvetica", "", 9)
-        self.set_text_color(160, 160, 180)
-        self.cell(0, 8, "Python 3.10+  |  PyTorch  |  scikit-learn  |  Hydra  |  HuggingFace Transformers", align="C")
+        self.rect(0, 243, 210, 32, "F")
+        self.set_font("Sans", "B", 10)
+        self.set_text_color(*WHITE)
+        self.cell(0, 7, "Ordre d'execution recommande", align="C",
+                  new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        self.ln(2)
+        steps = [
+            "1. Installation & Datasets",
+            "2. Axe 1 : train.py encoder=features",
+            "3. Axe 2 : train.py dataset=hc3 encoder=roberta",
+            "4. Axe 3 : finetune.py + generate.py",
+        ]
+        self.set_font("Sans", "", 9)
+        self.set_text_color(200, 200, 220)
+        for s in steps:
+            self.cell(0, 5.5, f"    {s}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     def section_header(self, title: str, color: tuple = ACCENT):
-        self.ln(4)
+        self.ln(5)
         self.set_fill_color(*color)
-        self.rect(self.get_x(), self.get_y(), 190, 0.6, "F")
-        self.ln(3)
-        self.set_font("Helvetica", "B", 13)
+        self.rect(self.l_margin, self.get_y(), 190, 0.5, "F")
+        self.ln(2)
+        self.set_font("Sans", "B", 12)
         self.set_text_color(*color)
         self.cell(0, 8, title, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         self.set_text_color(*BLACK)
@@ -100,273 +124,287 @@ class GuidePDF(FPDF):
         color = AXE_COLORS[n]
         self.set_fill_color(*color)
         self.set_text_color(*WHITE)
-        self.set_font("Helvetica", "B", 14)
-        self.cell(0, 12, f"  AXE {n} — {title}", fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        self.set_fill_color(color[0]+30, color[1]+30, min(color[2]+30, 255))
-        self.set_font("Helvetica", "I", 9)
-        self.cell(0, 7, f"  {subtitle}", fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        self.set_font("Sans", "B", 13)
+        self.cell(0, 11, f"  AXE {n} - {title}", fill=True,
+                  new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        r, g, b = color
+        self.set_fill_color(min(r+40, 255), min(g+40, 255), min(b+40, 255))
+        self.set_font("Sans", "I", 9)
+        self.cell(0, 6, f"  {subtitle}", fill=True,
+                  new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         self.set_text_color(*BLACK)
         self.ln(3)
 
-    def body_text(self, text: str, size: int = 10):
-        self.set_font("Helvetica", "", size)
+    def body_text(self, text: str, size: int = 10, link: str = ""):
+        self.set_font("Sans", "", size)
         self.set_text_color(*BLACK)
-        self.multi_cell(0, 5.5, text)
+        if link:
+            self.set_text_color(0, 0, 255) # Blue for link
+            self.cell(0, 5.5, text, link=link, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            self.set_text_color(*BLACK)
+        else:
+            self.multi_cell(0, 5.5, text)
         self.ln(1)
 
-    def bullet(self, text: str, indent: int = 8):
-        self.set_x(self.l_margin + indent)
-        self.set_font("Helvetica", "", 10)
+    def bullet(self, text: str):
+        self.set_x(self.l_margin + 5)
+        self.set_font("Sans", "", 10)
         self.set_text_color(*BLACK)
-        self.cell(5, 5.5, "\u2022")
-        self.set_x(self.l_margin + indent + 5)
+        self.cell(4, 5.5, "-")
+        self.set_x(self.l_margin + 9)
         self.multi_cell(0, 5.5, text)
 
-    def note_box(self, text: str, color: tuple = WARNING):
-        self.set_fill_color(color[0], color[1], color[2], )
-        x = self.get_x()
+    def note_box(self, text: str, color: tuple = WARNING_COLOR):
         y = self.get_y()
-        self.set_fill_color(255, 251, 230)
-        self.set_draw_color(*color)
-        self.set_line_width(0.8)
-        # Barre gauche
         self.set_fill_color(*color)
-        self.rect(self.l_margin, y, 2, 14, "F")
-        self.set_fill_color(255, 251, 230)
-        self.rect(self.l_margin + 2, y, 186, 14, "F")
+        self.rect(self.l_margin, y, 2.5, 20, "F")
+        self.set_fill_color(245, 245, 250)
+        self.rect(self.l_margin + 2.5, y, 187.5, 20, "F")
         self.set_xy(self.l_margin + 5, y + 2)
-        self.set_font("Helvetica", "B", 9)
+        self.set_font("Sans", "B", 8)
         self.set_text_color(*color)
-        self.cell(12, 5, "NOTE")
-        self.set_font("Helvetica", "", 9)
-        self.set_text_color(80, 80, 80)
-        self.set_x(self.l_margin + 17)
-        self.multi_cell(171, 5, text)
-        self.set_draw_color(0, 0, 0)
-        self.set_line_width(0.2)
+        self.cell(14, 5, "NOTA")
+        self.set_font("Sans", "", 8.5)
+        self.set_text_color(50, 50, 60)
+        self.set_x(self.l_margin + 18)
+        self.multi_cell(180, 5, text)
+        self.set_text_color(*BLACK)
         self.ln(3)
 
-    def code_block(self, lines: list[str], title: str = ""):
+    def code_block(self, lines: list, title: str = ""):
         if title:
-            self.set_font("Helvetica", "B", 8)
+            self.set_font("Sans", "I", 7.5)
             self.set_text_color(*GRAY)
             self.cell(0, 5, f"  # {title}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-        h_per_line = 5.5
-        total_h = h_per_line * len(lines) + 6
+        h = 5.2
+        total = h * len(lines) + 6
         x = self.l_margin
         y = self.get_y()
-
         self.set_fill_color(*CODE_BG)
-        self.rect(x, y, 190, total_h, "F")
-
+        self.rect(x, y, 190, total, "F")
         self.set_y(y + 3)
         for line in lines:
             self.set_x(x + 4)
-            self.set_font("Courier", "", 8.5)
-            # Coloration syntaxique simple
+            self.set_font("Mono", "", 8)
             if line.strip().startswith("#"):
                 self.set_text_color(117, 113, 94)
-            elif line.strip().startswith("python ") or line.strip().startswith("pip ") or line.strip().startswith("git "):
+            elif any(line.strip().startswith(k) for k in ("python ", "pip ", "git ", "cd ")):
                 self.set_text_color(*CODE_FG)
-            elif line.strip().startswith("cd "):
-                self.set_text_color(102, 217, 239)
             else:
                 self.set_text_color(248, 248, 242)
-            self.cell(0, h_per_line, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
+            self.cell(0, h, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         self.set_text_color(*BLACK)
         self.ln(3)
 
-    def step_number(self, n: int, title: str):
+    def step_num(self, n: int, title: str):
         self.set_fill_color(*ACCENT)
-        self.set_text_color(*WHITE)
-        self.set_font("Helvetica", "B", 9)
         y = self.get_y()
         self.rect(self.l_margin, y, 7, 7, "F")
         self.set_xy(self.l_margin, y)
+        self.set_font("Sans", "B", 8)
+        self.set_text_color(*WHITE)
         self.cell(7, 7, str(n), align="C")
-        self.set_text_color(*BLACK)
-        self.set_font("Helvetica", "B", 11)
+        self.set_font("Sans", "B", 11)
+        self.set_text_color(*DARK_BG)
         self.set_x(self.l_margin + 10)
         self.cell(0, 7, title, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        self.set_text_color(*BLACK)
         self.ln(1)
 
 
+# ── Construction du PDF ──────────────────────────────────────────────────────
+
 def build_pdf(output_path: str):
     pdf = GuidePDF()
+    pdf.setup_fonts()
     pdf.set_margins(12, 12, 12)
     pdf.set_auto_page_break(auto=True, margin=18)
-    pdf.add_page()
 
-    # ═══════════════════════════════════════════════════════════
-    # PAGE 1 : COUVERTURE
-    # ═══════════════════════════════════════════════════════════
+    # ── COUVERTURE ───────────────────────────────────────────────────────────
+    pdf.add_page()
     pdf.cover_page()
 
-    # ═══════════════════════════════════════════════════════════
-    # PAGE 2 : PREREQUIS & INSTALLATION
-    # ═══════════════════════════════════════════════════════════
+    # ── PAGE 2 : INSTALLATION ────────────────────────────────────────────────
     pdf.add_page()
-    pdf.section_header("0. PREREQUIS & INSTALLATION INITIALE", DARK_BG)
+    pdf.section_header("0. PREREQUIS & INSTALLATION", DARK_BG)
 
-    pdf.step_number(1, "Prerequisites systeme")
-    pdf.bullet("Python 3.10 ou superieur")
+    pdf.step_num(1, "Prerequisites systeme")
+    pdf.bullet("Python 3.10 ou superieur  (verifier : python --version)")
     pdf.bullet("Git installe et configure")
-    pdf.bullet("Au moins 8 Go de RAM (16 Go recommandes)")
-    pdf.bullet("GPU optionnel (requis uniquement pour Mistral 7B / RoBERTa en production)")
+    pdf.bullet("8 Go de RAM minimum (16 Go recommandes)")
+    pdf.bullet("GPU optionnel (necessaire uniquement pour RoBERTa / Mistral 7B)")
     pdf.ln(3)
 
-    pdf.step_number(2, "Cloner le depot Git")
+    pdf.step_num(2, "Cloner le depot Git")
     pdf.code_block([
         "git clone https://github.com/votre-org/Projet-DSAI.git",
         "cd Projet-DSAI",
     ], "Clonage et navigation")
 
-    pdf.step_number(3, "Creer et activer le virtual environment")
+    pdf.step_num(3, "Creer et activer l'environnement virtuel")
     pdf.body_text("Windows :")
     pdf.code_block([
         "python -m venv env",
         "env\\Scripts\\activate",
+        "# Le prompt affiche maintenant : (env) ...",
     ], "Windows")
     pdf.body_text("macOS / Linux :")
     pdf.code_block([
         "python -m venv env",
         "source env/bin/activate",
     ], "macOS / Linux")
+    pdf.note_box(
+        "Toujours activer le venv avant de lancer une commande. "
+        "Le prompt doit afficher (env) au debut.",
+        WARNING_COLOR
+    )
 
-    pdf.note_box("Le prompt de votre terminal doit afficher (env) pour confirmer l'activation.", WARNING)
-
-    pdf.step_number(4, "Installer les dependances")
+    pdf.step_num(4, "Installer les dependances")
     pdf.code_block([
         "pip install --upgrade pip",
         "pip install -r requirements.txt",
         "",
-        "# Dependances principales installes :",
+        "# Dependances principales :",
         "# numpy, pandas, scikit-learn, matplotlib",
         "# nltk, gensim, sentence-transformers, transformers, torch",
-        "# hydra-core, omegaconf",
-        "# convokit, datasets (HuggingFace)",
-        "# fpdf2 (pour regen le PDF)",
+        "# hydra-core, omegaconf, convokit, datasets, fpdf2",
     ], "Installation")
 
-    pdf.step_number(5, "Telecharger les datasets")
+    pdf.step_num(5, "Telecharger les datasets")
+    
+    pdf.body_text("Le projet utilise deux datasets principaux :")
+    pdf.bullet("WinningArgCorpus (WAC) pour les Axes 1 et 3")
+    pdf.bullet("Human ChatGPT Comparison Corpus (HC3) pour l'Axe 2")
+    
+    pdf.ln(2)
+    pdf.body_text("Source originelle WAC : ", size=9)
+    pdf.body_text("https://convokit.cornell.edu/documentation/winning.html", size=9, link="https://convokit.cornell.edu/documentation/winning.html")
+    
+    pdf.body_text("Source originelle HC3 : ", size=9)
+    pdf.body_text("https://huggingface.co/datasets/Hello-SimpleAI/HC3", size=9, link="https://huggingface.co/datasets/Hello-SimpleAI/HC3")
+    
+    pdf.ln(3)
+    pdf.body_text("Pour tout telecharger et formatter correctement :")
+    
     pdf.code_block([
-        "# WinningArgCorpus (Axes 1 & 2)",
+        "# WinningArgCorpus (Axes 1 & 3)",
         "python -X utf8 scripts/download_datasets.py --dataset wac",
         "",
-        "# HC3 — Human ChatGPT Comparison Corpus (Axe 2)",
+        "# HC3 - Human ChatGPT Comparison Corpus (Axe 2)",
         "python -X utf8 scripts/download_datasets.py --dataset hc3",
         "",
-        "# Ou tout d'un coup :",
+        "# Ou les deux d'un coup :",
         "python -X utf8 scripts/download_datasets.py --all",
-    ], "Telechargement")
-
+    ], "Telechargement automatique")
     pdf.note_box(
-        "Les datasets sont sauvegardes dans datasets/WinningArgCorpus/WAC.csv "
-        "et datasets/HC3/train.csv. Ces dossiers sont dans .gitignore.",
+        "Les datasets seront formattes et sauvegardes dans :\n"
+        "  datasets/WinningArgCorpus/WAC.csv  (19 714 arguments)\n"
+        "  datasets/HC3/train.csv             (17 112 questions)\n\n"
+        "Si le telechargement echoue, vous pouvez telecharger les sources manuellement\n"
+        "et les placer dans ces chemins exacts.",
         SUCCESS
     )
 
-    # ═══════════════════════════════════════════════════════════
-    # PAGE 3 : AXE 1
-    # ═══════════════════════════════════════════════════════════
+    # ── PAGE 3 : AXE 1 ──────────────────────────────────────────────────────
     pdf.add_page()
-    pdf.axe_banner(1, "ANALYSE D'ARGUMENTS", "Predire quels arguments sont convaincants (WAC dataset)")
+    pdf.axe_banner(1, "ANALYSE D'ARGUMENTS",
+                   "Predire quels arguments convainquent l'auteur du post (WAC dataset)")
 
     pdf.body_text(
-        "L'Axe 1 entraine un SVM sur le WinningArgCorpus (WAC) pour predire si un argument "
-        "va convaincre l'auteur du post original. Quatre encodeurs sont disponibles. "
-        "Chaque run sauvegarde automatiquement le modele entraine (axe1_svm_*.pkl)."
+        "L'Axe 1 entraine un SVM sur le WinningArgCorpus pour predire si un argument "
+        "va convaincre l'auteur du post original (label success=1). "
+        "Quatre encodeurs sont disponibles. Chaque run sauvegarde le modele SVM (.pkl) "
+        "dans le dossier outputs/ pour reutilisation par l'Axe 3."
     )
 
-    pdf.section_header("Approche A — Features stylistiques (pairwise)", ACCENT)
+    pdf.section_header("Approche A - Features stylistiques pairwise  [RECOMMANDEE CPU]", ACCENT)
     pdf.body_text(
-        "Methode la plus rapide sur CPU. Construit des features numeriques (nb de mots, "
-        "hedges, liens, lisibilite...) et compare paire gagnant/perdant."
+        "Calcule ~50 features numeriques (nb mots, hedges, liens, lisibilite Flesch-Kincaid...) "
+        "et compare paires (gagnant, perdant). La plus rapide sur CPU."
     )
     pdf.code_block([
         "python train.py encoder=features",
         "",
         "# Sortie attendue :",
-        "#   Train : 7 xxx exemples | Test : 1 xxx exemples",
-        "#   AUC final : 0.5x - 0.6x",
-        "#   Modele sauvegarde -> axe1_svm_features_wac.pkl",
+        "#   Train : ~7 000 exemples | Test : ~1 800 exemples",
+        "#   AUC final : 0.55 - 0.65",
+        "#   Modele -> outputs/.../axe1_svm_features_wac.pkl",
     ])
 
-    pdf.section_header("Approche B — TF-IDF + SVM", ACCENT)
+    pdf.section_header("Approche B - TF-IDF + SVM  [Baseline rapide]", ACCENT)
     pdf.body_text("Representation sac-de-mots pondere. Bon point de comparaison baseline.")
     pdf.code_block([
         "python train.py encoder=tfidf",
-        "",
         "# AUC attendu : ~0.58 - 0.64",
     ])
 
-    pdf.section_header("Approche C — Word2Vec + SVM", ACCENT)
-    pdf.body_text("Embeddings de mots entraines sur le corpus, moyenne par texte.")
+    pdf.section_header("Approche C - Word2Vec + SVM", ACCENT)
+    pdf.body_text("Embeddings de mots (100d) entraines sur le corpus, moyenne par texte.")
     pdf.code_block([
         "python train.py encoder=w2v",
     ])
 
-    pdf.section_header("Approche D — RoBERTa + SVM", ACCENT)
-    pdf.body_text("Embeddings contextuels pre-entraines (tres lent sur CPU, recommande GPU).")
+    pdf.section_header("Approche D - RoBERTa + SVM  [GPU recommande]", ACCENT)
+    pdf.body_text(
+        "Embeddings contextuels pre-entraines (1 024 dimensions). "
+        "Meilleure performance attendue mais tres lent sur CPU."
+    )
     pdf.code_block([
         "python train.py encoder=roberta",
-        "",
-        "# ATTENTION : tres lent sur CPU (~30-60 min)",
+        "# ATTENTION : ~30-60 min sur CPU",
     ])
-
     pdf.note_box(
-        "CONSEIL CPU : Commencer par encoder=features (< 5 min), puis tfidf (~2-5 min), "
-        "puis w2v (~5-10 min). Garder roberta pour un environnement GPU.",
-        WARNING
+        "ORDRE RECOMMANDE SUR CPU : features (< 5 min) -> tfidf (~3 min) "
+        "-> w2v (~8 min) -> roberta (GPU de preference)",
+        WARNING_COLOR
     )
 
-    pdf.section_header("Sweep complet (tous les encodeurs)", ACCENT)
+    pdf.section_header("Sweep et visualisation", ACCENT)
     pdf.code_block([
-        "# Lance les 4 encodeurs en sequence",
-        "python train.py -m encoder=tfidf,w2v,features",
+        "# Lancer plusieurs encodeurs en sequence",
+        "python train.py -m encoder=features,tfidf,w2v",
         "",
         "# Visualisation PCA des representations",
         "python evaluate.py encoder=features",
         "python evaluate.py encoder=tfidf",
+        "",
+        "# Afficher la config sans lancer",
+        "python train.py --cfg job",
     ])
 
-    pdf.section_header("Outputs Axe 1", ACCENT)
-    pdf.body_text("Chaque run cree un dossier horodate dans outputs/ :")
+    pdf.section_header("Sorties Axe 1", ACCENT)
     pdf.code_block([
-        "outputs/",
-        "  2026-06-16/",
-        "    15-30-00_features_wac/",
-        "      train.log          <- rapport complet",
-        "      .hydra/config.yaml <- config exacte du run",
-        "      axe1_svm_features_wac.pkl  <- modele SVM",
+        "outputs/2026-06-16/15-30-00_features_wac/",
+        "  train.log                      <- rapport complet (AUC, classification report)",
+        "  .hydra/config.yaml             <- config exacte du run",
+        "  axe1_svm_features_wac.pkl      <- MODELE SVM (necessaire pour Axe 3)",
+        "  pca_visualization.png          <- si evaluate.py lance",
     ])
 
-    # ═══════════════════════════════════════════════════════════
-    # PAGE 4 : AXE 2
-    # ═══════════════════════════════════════════════════════════
+    # ── PAGE 4 : AXE 2 ──────────────────────────────────────────────────────
     pdf.add_page()
-    pdf.axe_banner(2, "DETECTION DE TEXTES SYNTHETIQUES", "Distinguer textes humains vs generes par ChatGPT")
+    pdf.axe_banner(2, "DETECTION DE TEXTES SYNTHETIQUES",
+                   "Distinguer textes humains vs generes par ChatGPT (HC3 dataset)")
 
     pdf.body_text(
-        "L'Axe 2 entraine un SVM sur le dataset HC3 (Human ChatGPT Comparison Corpus) "
-        "pour detecter si un texte a ete ecrit par un humain (label 0) ou par ChatGPT (label 1). "
-        "Le pipeline est identique a l'Axe 1, seul le dataset change."
+        "L'Axe 2 entraine un SVM sur le dataset HC3 pour detecter si un texte a ete ecrit "
+        "par un humain (label 0) ou par ChatGPT (label 1). "
+        "Le pipeline est identique a l'Axe 1 - seul le dataset change."
     )
 
     pdf.note_box(
-        "S'assurer d'avoir telecharge HC3 : "
-        "python -X utf8 scripts/download_datasets.py --dataset hc3",
-        ACCENT
+        "Prealable : avoir telecharge HC3 :\n"
+        "  python -X utf8 scripts/download_datasets.py --dataset hc3",
+        ACCENT2
     )
 
-    pdf.section_header("Commandes (dans l'ordre recommande)", ACCENT2)
+    pdf.section_header("Commandes (ordre recommande)", ACCENT2)
     pdf.code_block([
-        "# Approche A : RoBERTa + SVM (meilleure performance attendue)",
+        "# Approche A : RoBERTa + SVM (meilleure performance)",
         "python train.py dataset=hc3 encoder=roberta",
         "",
-        "# Approche B : TF-IDF + SVM (baseline rapide)",
+        "# Approche B : TF-IDF + SVM (baseline rapide sur CPU)",
         "python train.py dataset=hc3 encoder=tfidf",
         "",
         "# Approche C : Word2Vec + SVM",
@@ -378,184 +416,175 @@ def build_pdf(output_path: str):
 
     pdf.section_header("Visualisation PCA", ACCENT2)
     pdf.code_block([
-        "# Visualiser la separation humain vs ChatGPT",
+        "# Visualiser la separation humain vs ChatGPT dans l'espace 2D",
         "python evaluate.py dataset=hc3 encoder=roberta",
-        "",
-        "# La figure PCA est sauvegardee dans outputs/",
     ])
 
-    pdf.section_header("Outputs Axe 2", ACCENT2)
+    pdf.section_header("Sorties Axe 2", ACCENT2)
     pdf.code_block([
-        "outputs/",
-        "  2026-06-16/",
-        "    15-45-00_roberta_hc3/",
-        "      train.log",
-        "      axe1_svm_roberta_hc3.pkl  <- modele SVM Axe 2",
-        "      pca_visualization.png     <- si evaluate.py lance",
+        "outputs/2026-06-16/15-45-00_roberta_hc3/",
+        "  train.log",
+        "  axe1_svm_roberta_hc3.pkl       <- MODELE SVM Axe 2 (necessaire pour Axe 3)",
+        "  pca_visualization.png",
     ])
 
-    # ═══════════════════════════════════════════════════════════
-    # PAGE 5 : AXE 3
-    # ═══════════════════════════════════════════════════════════
+    # ── PAGE 5 : AXE 3 ──────────────────────────────────────────────────────
     pdf.add_page()
     pdf.axe_banner(3, "GENERATION D'ARGUMENTS CONVAINCANTS",
                    "Fine-tuning LLM + Best-of-N + Prompt Engineering")
 
     pdf.body_text(
         "L'Axe 3 utilise les modeles des Axes 1 et 2 pour generer des arguments convaincants. "
-        "PREREQUIS : avoir lance train.py pour Axe 1 et recupere le fichier axe1_svm_*.pkl."
+        "Deux strategies : (A) Fine-tuning du LLM sur WAC + selection Best-of-N par le SVM Axe 1, "
+        "et (B) Prompt Engineering derive des features Axe 1 (zero-shot, pas de fine-tuning)."
     )
 
     pdf.note_box(
-        "PREREQUIS OBLIGATOIRE avant de lancer Axe 3 :\n"
-        "1. Axe 1 : python train.py encoder=features  -> genere axe1_svm_features_wac.pkl\n"
-        "2. Axe 2 : python train.py dataset=hc3 encoder=roberta  -> genere axe1_svm_roberta_hc3.pkl",
-        WARNING
+        "PREREQUIS OBLIGATOIRES avant Axe 3 :\n"
+        "  1. Axe 1 entraine : outputs/.../axe1_svm_features_wac.pkl\n"
+        "  2. Axe 2 entraine : outputs/.../axe1_svm_roberta_hc3.pkl\n"
+        "Notez les chemins exacts de ces fichiers .pkl avant de continuer.",
+        WARNING_COLOR
     )
 
-    pdf.section_header("Etape 1 — Fine-tuner le LLM sur les arguments gagnants", SUCCESS)
+    pdf.section_header("Etape 1 - Fine-tuner le LLM sur les arguments gagnants", SUCCESS)
     pdf.body_text(
-        "On fine-tune GPT-2 (ou Mistral avec LoRA) sur les arguments gagnants du WAC. "
-        "Le modele apprend a 'parler comme un argument convaincant'."
+        "On fine-tune GPT-2 (ou Mistral avec LoRA) en next-token prediction uniquement "
+        "sur les arguments success=1 du WAC. Le modele apprend le style des arguments convaincants."
     )
     pdf.code_block([
-        "# GPT-2 small — tourne sur CPU (~2-3 heures)",
+        "# GPT-2 small - fonctionne sur CPU (~2-3 heures)",
         "python finetune.py llm=gpt2",
         "",
-        "# Mistral 7B avec LoRA — necessite GPU",
+        "# Mistral 7B avec LoRA - GPU requis",
         "python finetune.py llm=mistral",
         "",
-        "# Sortie : dossier finetuned_gpt2/ avec le modele",
+        "# Sortie : dossier finetuned_gpt2/ contenant le modele",
     ])
 
-    pdf.section_header("Etape 2a — Generation Best-of-N", SUCCESS)
+    pdf.section_header("Etape 2a - Generation Best-of-N", SUCCESS)
     pdf.body_text(
-        "Genere N arguments pour chaque OP, les score avec le SVM Axe 1, et retient le meilleur."
+        "Pour chaque post original (OP) : genere N arguments, les score avec le SVM Axe 1, "
+        "retient le meilleur. La selection utilise la fonction de decision du SVM comme oracle."
     )
     pdf.code_block([
-        "# Remplacer le chemin par votre fichier .pkl reel",
-        "python generate.py strategy=best_of_n \\",
-        '    axe1.model_path="outputs/2026-06-16/.../axe1_svm_features_wac.pkl" \\',
+        "# Remplacer les chemins par vos fichiers .pkl reels",
+        "python generate.py strategy=best_of_n",
+        '    axe1.model_path="outputs/2026-06-16/.../axe1_svm_features_wac.pkl"',
         '    axe2.model_path="outputs/2026-06-16/.../axe1_svm_roberta_hc3.pkl"',
         "",
         "# Avec le modele fine-tune specifique",
         "python generate.py strategy=best_of_n llm.model_id=finetuned_gpt2/",
         "",
-        "# Changer le nombre de candidats",
+        "# Changer le nombre de candidats (defaut : 10)",
         "python generate.py strategy=best_of_n strategy.n_candidates=20",
     ])
 
-    pdf.section_header("Etape 2b — Generation par Prompt Engineering (zero-shot)", SUCCESS)
+    pdf.section_header("Etape 2b - Generation par Prompt Engineering (zero-shot)", SUCCESS)
     pdf.body_text(
-        "Analyse les features Axe 1 les plus discriminantes et les traduit en instructions "
-        "pour guider le LLM. Aucun fine-tuning requis."
+        "Analyse les features Axe 1 les plus discriminantes (via les coefficients du SVM) "
+        "et les traduit en instructions naturelles dans le prompt. Pas de fine-tuning requis."
     )
     pdf.code_block([
-        "python generate.py strategy=prompt_eng \\",
-        '    axe1.model_path="outputs/2026-06-16/.../axe1_svm_features_wac.pkl" \\',
+        "python generate.py strategy=prompt_eng",
+        '    axe1.model_path="outputs/2026-06-16/.../axe1_svm_features_wac.pkl"',
         '    axe2.model_path="outputs/2026-06-16/.../axe1_svm_roberta_hc3.pkl"',
         "",
-        "# Changer le nombre de features utilisees pour le prompt",
-        "python generate.py strategy=prompt_eng strategy.top_k_features=5",
+        "# Ex. d'instructions generees depuis Axe 1 :",
+        "#   'Use at least 2 concrete examples'",
+        "#   'Cite external sources with links'",
+        "#   'Keep sentences under 20 words'",
     ])
 
-    pdf.section_header("Outputs Axe 3", SUCCESS)
+    pdf.section_header("Sorties Axe 3", SUCCESS)
     pdf.code_block([
-        "outputs/generation/",
-        "  2026-06-16/",
-        "    15-00-00_gpt2_best_of_n/",
-        "      generate.log          <- logs de generation",
-        "      generation_report.csv <- rapport complet",
+        "outputs/generation/2026-06-16/15-00_gpt2_best_of_n/",
+        "  generate.log              <- logs de generation",
+        "  generation_report.csv     <- rapport : axe1_score, axe2_authenticity",
         "",
-        "finetuned_gpt2/             <- modele fine-tune",
+        "finetuned_gpt2/             <- modele GPT-2 fine-tune (reutilisable)",
     ])
 
-    # ═══════════════════════════════════════════════════════════
-    # PAGE 6 : REFERENCE RAPIDE
-    # ═══════════════════════════════════════════════════════════
+    # ── PAGE 6 : REFERENCE RAPIDE ────────────────────────────────────────────
     pdf.add_page()
-    pdf.section_header("REFERENCE RAPIDE — Toutes les commandes", DARK_BG)
+    pdf.section_header("REFERENCE RAPIDE - Toutes les commandes dans l'ordre", DARK_BG)
 
-    pdf.set_font("Helvetica", "B", 10)
-    pdf.set_text_color(*DARK_BG)
-    pdf.cell(0, 7, "INSTALLATION", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    pdf.code_block([
-        "git clone <url> && cd Projet-DSAI",
-        "python -m venv env && env\\Scripts\\activate",
-        "pip install -r requirements.txt",
-        "python -X utf8 scripts/download_datasets.py --all",
-    ])
+    blocks = [
+        ("INSTALLATION", DARK_BG, [
+            "git clone <url-du-repo> && cd Projet-DSAI",
+            "python -m venv env",
+            "env\\Scripts\\activate          # Windows",
+            "# source env/bin/activate    # macOS/Linux",
+            "pip install -r requirements.txt",
+            "python -X utf8 scripts/download_datasets.py --all",
+        ]),
+        ("AXE 1 - Analyse d'arguments (WAC)", ACCENT, [
+            "python train.py encoder=features       # Recommande CPU - ~5 min",
+            "python train.py encoder=tfidf          # Baseline - ~3 min",
+            "python train.py encoder=w2v            # ~8 min",
+            "python train.py encoder=roberta        # GPU recommande",
+            "python evaluate.py encoder=features    # Visualisation PCA",
+        ]),
+        ("AXE 2 - Detection synthetique (HC3)", ACCENT2, [
+            "python train.py dataset=hc3 encoder=roberta    # GPU recommande",
+            "python train.py dataset=hc3 encoder=tfidf      # Baseline CPU",
+            "python evaluate.py dataset=hc3 encoder=roberta # Visualisation",
+        ]),
+        ("AXE 3 - Generation d'arguments", SUCCESS, [
+            "python finetune.py llm=gpt2             # Fine-tuning ~2-3h CPU",
+            "python generate.py strategy=best_of_n \\",
+            '    axe1.model_path="outputs/.../axe1_svm_features_wac.pkl" \\',
+            '    axe2.model_path="outputs/.../axe1_svm_roberta_hc3.pkl"',
+            "",
+            "python generate.py strategy=prompt_eng \\",
+            '    axe1.model_path="outputs/.../axe1_svm_features_wac.pkl" \\',
+            '    axe2.model_path="outputs/.../axe1_svm_roberta_hc3.pkl"',
+        ]),
+        ("HYDRA - Commandes utiles", GRAY, [
+            "python train.py --cfg job                 # Voir config sans lancer",
+            "python train.py -m encoder=tfidf,w2v,features  # Sweep multi-run",
+            "python train.py encoder=tfidf seed=99    # Override n'importe quelle valeur",
+        ]),
+    ]
 
-    pdf.set_font("Helvetica", "B", 10)
-    pdf.set_text_color(*ACCENT)
-    pdf.cell(0, 7, "AXE 1 — Analyse d'arguments", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    pdf.code_block([
-        "python train.py encoder=features   # Recommande CPU",
-        "python train.py encoder=tfidf",
-        "python train.py encoder=w2v",
-        "python train.py encoder=roberta    # GPU recommande",
-        "python evaluate.py encoder=features",
-    ])
-
-    pdf.set_font("Helvetica", "B", 10)
-    pdf.set_text_color(*ACCENT2)
-    pdf.cell(0, 7, "AXE 2 — Detection synthetique", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    pdf.code_block([
-        "python train.py dataset=hc3 encoder=roberta",
-        "python train.py dataset=hc3 encoder=tfidf",
-        "python evaluate.py dataset=hc3 encoder=roberta",
-    ])
-
-    pdf.set_font("Helvetica", "B", 10)
-    pdf.set_text_color(*SUCCESS)
-    pdf.cell(0, 7, "AXE 3 — Generation", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    pdf.code_block([
-        "python finetune.py llm=gpt2",
-        'python generate.py strategy=best_of_n axe1.model_path="..."',
-        'python generate.py strategy=prompt_eng axe1.model_path="..."',
-    ])
-
-    pdf.set_font("Helvetica", "B", 10)
-    pdf.set_text_color(*BLACK)
-    pdf.cell(0, 7, "HYDRA — Commandes utiles", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    pdf.code_block([
-        "python train.py --cfg job           # Voir la config sans lancer",
-        "python train.py -m encoder=tfidf,w2v,features  # Sweep multi-run",
-        "python train.py encoder=tfidf seed=123  # Override une valeur",
-    ])
+    for title, color, lines in blocks:
+        self_ref = pdf
+        self_ref.set_font("Sans", "B", 9)
+        self_ref.set_text_color(*color)
+        self_ref.cell(0, 6, title, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.code_block(lines)
+        pdf.ln(1)
 
     pdf.section_header("STRUCTURE DU PROJET", DARK_BG)
     pdf.code_block([
         "Projet-DSAI/",
-        "  configs/         <- Configs Hydra YAML",
-        "    dataset/       <- wac.yaml | hc3.yaml | grid.yaml",
-        "    encoder/       <- tfidf | w2v | roberta | features",
-        "    model/         <- svm.yaml",
-        "    generation/    <- config_generate.yaml | llm/ | strategy/",
+        "  configs/                <- Configs Hydra YAML",
+        "    dataset/               <- wac.yaml | hc3.yaml | grid.yaml",
+        "    encoder/               <- tfidf | w2v | roberta | features",
+        "    model/                 <- svm.yaml",
+        "    generation/            <- config_generate.yaml | llm/ | strategy/",
         "  src/",
-        "    data/          <- loaders & preprocessing",
-        "    features/      <- features stylistiques",
-        "    encoders/      <- TF-IDF, W2V, RoBERTa, Features",
-        "    models/        <- SVM classifier",
-        "    generation/    <- finetuning, generator, best_of_n, evaluator",
-        "  datasets/        <- donnees (non versionnees)",
-        "  outputs/         <- resultats Hydra (non versionnes)",
-        "  train.py         <- point d'entree entrainement",
-        "  evaluate.py      <- visualisation PCA",
-        "  finetune.py      <- fine-tuning LLM (Axe 3)",
-        "  generate.py      <- generation d'arguments (Axe 3)",
-        "  scripts/         <- download_datasets.py",
+        "    data/                  <- loaders & preprocessing",
+        "    features/              <- features stylistiques",
+        "    encoders/              <- TF-IDF, W2V, RoBERTa, Features",
+        "    models/                <- SVM classifier (save/load)",
+        "    generation/            <- finetuning, generator, best_of_n, evaluator",
+        "  datasets/                <- donnees brutes (non versionnees)",
+        "  outputs/                 <- resultats Hydra (non versionnes)",
+        "  train.py                 <- entree entrainement",
+        "  evaluate.py              <- visualisation PCA",
+        "  finetune.py              <- fine-tuning LLM (Axe 3)",
+        "  generate.py              <- generation d'arguments (Axe 3)",
+        "  scripts/                 <- download_datasets.py, generate_pdf.py",
     ])
 
-    # Barre coloree finale
+    # Barre finale
     pdf.set_fill_color(*ACCENT)
-    pdf.rect(0, 288, 210, 4, "F")
+    pdf.rect(0, 291, 210, 4, "F")
 
-    # Sauvegarde
     pdf.output(output_path)
     print(f"[OK] PDF genere : {output_path}")
 
 
 if __name__ == "__main__":
-    out = "Guide_Demarrage_Projet_DSAI.pdf"
-    build_pdf(out)
+    build_pdf("Guide_Demarrage_Projet_DSAI.pdf")
