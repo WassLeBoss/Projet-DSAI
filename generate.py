@@ -94,6 +94,16 @@ def main(cfg: DictConfig) -> None:
         axe2_enc_name=cfg.axe2.encoder_name,
     )
 
+    # ── Test d'evaluation rapide (fail-fast) ─────────────────────────────────
+    log.info("Verification de la compatibilite des modeles (dry-run)...")
+    try:
+        evaluator.evaluate("Test OP", "Test Generated")
+        log.info("Verification OK ! Les dimensions correspondent.")
+    except Exception as e:
+        log.error("ERREUR CRITIQUE : Les dimensions des modeles ne correspondent pas !")
+        log.error("Details: %s", str(e))
+        raise RuntimeError("Echec du dry-run d'evaluation.") from e
+
     # ── Strategie de generation ───────────────────────────────────────────────
     results = []
 

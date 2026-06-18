@@ -68,7 +68,7 @@ class ArgumentEvaluator:
         if self.axe2_encoder is None and self.axe2_enc_name == "roberta":
             from src.encoders.roberta_encoder import RobertaEncoder
             from omegaconf import OmegaConf
-            cfg = OmegaConf.create({"model_name": "sentence-transformers/all-MiniLM-L6-v2", "batch_size": 32, "show_progress_bar": False, "normalize_embeddings": True})
+            cfg = OmegaConf.create({"model_name": "all-roberta-large-v1", "batch_size": 32, "show_progress_bar": False, "normalize_embeddings": True})
             self.axe2_encoder = RobertaEncoder(cfg)
 
     def _encode_axe1(self, text: str, op_text: str) -> np.ndarray:
