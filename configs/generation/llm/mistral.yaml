@@ -2,6 +2,7 @@
 name: mistral
 model_id: mistralai/Mistral-7B-Instruct-v0.2
 use_lora: true
+quantize_4bit: true
 
 # LoRA
 lora_r: 16

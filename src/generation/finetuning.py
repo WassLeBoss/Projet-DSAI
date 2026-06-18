@@ -111,7 +111,22 @@ class WACFinetuner:
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
-        self.model = AutoModelForCausalLM.from_pretrained(cfg.model_id)
+        model_kwargs = {}
+        if getattr(cfg, "quantize_4bit", False):
+            from transformers import BitsAndBytesConfig
+            log.info("Activation de la quantification 4-bit (QLoRA)...")
+            model_kwargs["quantization_config"] = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_use_double_quant=True,
+            )
+            model_kwargs["device_map"] = "auto"
+
+        self.model = AutoModelForCausalLM.from_pretrained(
+            cfg.model_id, 
+            **model_kwargs
+        )
 
         if cfg.use_lora:
             self._apply_lora()
@@ -150,6 +165,7 @@ class WACFinetuner:
             report_to="none",
             fp16=torch.cuda.is_available(),
             gradient_accumulation_steps=getattr(self.cfg, "gradient_accumulation_steps", 1),
+            gradient_checkpointing=getattr(self.cfg, "quantize_4bit", False),
         )
 
         trainer = Trainer(

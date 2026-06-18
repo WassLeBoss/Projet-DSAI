@@ -11,6 +11,9 @@ gensim>=4.3
 sentence-transformers>=2.2
 transformers>=4.35
 torch>=2.0
+accelerate>=0.25
+peft
+bitsandbytes
 
 # ── Hydra ───────────────────────────────────────────
 hydra-core>=1.3
