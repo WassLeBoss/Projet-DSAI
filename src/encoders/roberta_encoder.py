@@ -52,3 +52,7 @@ class RobertaEncoder:
         X_train = self._encode(texts_train)
         X_test  = self._encode(texts_test)
         return X_train, X_test
+
+    def transform(self, texts: list[str]) -> np.ndarray:
+        """Encode de nouveaux textes pour l'inférence/évaluation."""
+        return self._encode(texts)

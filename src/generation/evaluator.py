@@ -58,11 +58,18 @@ class ArgumentEvaluator:
     ) -> None:
         self.axe1_clf     = axe1_clf
         self.axe2_clf     = axe2_clf
-        self.axe1_encoder = axe1_encoder
-        self.axe2_encoder = axe2_encoder
         self.axe1_enc_name = axe1_enc_name
         self.axe2_enc_name = axe2_enc_name
         self.feature_names = get_feature_names()
+        
+        self.axe1_encoder = axe1_encoder
+        self.axe2_encoder = axe2_encoder
+        
+        if self.axe2_encoder is None and self.axe2_enc_name == "roberta":
+            from src.encoders.roberta_encoder import RobertaEncoder
+            from omegaconf import OmegaConf
+            cfg = OmegaConf.create({"model_name": "sentence-transformers/all-MiniLM-L6-v2", "batch_size": 32, "show_progress_bar": False, "normalize_embeddings": True})
+            self.axe2_encoder = RobertaEncoder(cfg)
 
     def _encode_axe1(self, text: str, op_text: str) -> np.ndarray:
         """Encode un texte pour l'Axe 1."""
