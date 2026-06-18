@@ -157,6 +157,44 @@ def main(cfg: DictConfig) -> None:
     report_df.to_csv(report_path, index=False)
     log.info("Rapport sauvegarde -> %s", report_path)
 
+    # Sauvegarde version HTML lisible
+    html_path = "generation_report.html"
+    html_style = """
+    <style>
+      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f9f9f9;}
+      table { border-collapse: collapse; width: 100%; background-color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+      th, td { border: 1px solid #ddd; padding: 15px; text-align: left; vertical-align: top; }
+      th { background-color: #4CAF50; color: white; position: sticky; top: 0; }
+      tr:nth-child(even) { background-color: #f2f2f2; }
+      tr:hover { background-color: #e8f5e9; }
+      .text-cell { white-space: pre-wrap; font-family: monospace; font-size: 13px; line-height: 1.4; max-width: 600px;}
+      .score-cell { font-weight: bold; font-size: 16px;}
+      .score-good { color: #2e7d32; }
+      .score-bad { color: #c62828; }
+    </style>
+    """
+    
+    html_content = f"<!DOCTYPE html>\n<html>\n<head><meta charset='utf-8'>{html_style}</head>\n<body>\n<h2>Rapport de Generation - Axe 3</h2>\n"
+    html_content += "<table>\n<tr><th>OP (Message original)</th><th>Reponse de l'IA (LLM)</th><th>Score Axe 1 (Convaincant > 0)</th><th>Score Axe 2 (Humain < 0)</th></tr>\n"
+    
+    for _, row in report_df.iterrows():
+        a1_class = "score-good" if row['axe1_score'] > 0 else "score-bad"
+        a2_class = "score-good" if row['axe2_authenticity'] < 0 else "score-bad"
+        
+        html_content += f"""
+        <tr>
+            <td class="text-cell">{str(row['op_text']).replace('<', '&lt;')}</td>
+            <td class="text-cell">{str(row['generated_text']).replace('<', '&lt;')}</td>
+            <td class="score-cell {a1_class}">{row['axe1_score']:.3f}</td>
+            <td class="score-cell {a2_class}">{row['axe2_authenticity']:.3f}</td>
+        </tr>
+        """
+    html_content += "</table>\n</body>\n</html>"
+    
+    with open(html_path, "w", encoding="utf-8") as f:
+        f.write(html_content)
+    log.info("Rapport HTML lisible sauvegarde -> %s", html_path)
+
     # Affichage de quelques exemples
     log.info("\n--- Exemples generes ---")
     for _, row in report_df.head(3).iterrows():

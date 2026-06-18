@@ -160,8 +160,8 @@ class ArgumentEvaluator:
         for op_text, gen_text in results:
             r = self.evaluate(op_text, gen_text, reference_winners)
             rows.append({
-                "op_text":          op_text[:80] + "...",
-                "generated_text":   gen_text[:120] + "...",
+                "op_text":          op_text,
+                "generated_text":   gen_text,
                 "axe1_score":       r.axe1_score,
                 "axe2_authenticity": r.axe2_authenticity,
                 **{f"feat_{k}": v for k, v in list(r.feature_profile.items())[:10]},
