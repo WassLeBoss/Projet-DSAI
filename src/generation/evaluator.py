@@ -56,7 +56,15 @@ class ArgumentEvaluator:
         axe1_enc_name: str = "features",
         axe2_enc_name: str = "roberta",
     ) -> None:
-        self.axe1_clf     = axe1_clf
+        if isinstance(axe1_clf, dict) and axe1_clf.get("type") == "roberta_finetuned":
+            self.axe1_model = axe1_clf["model"]
+            self.axe1_tokenizer = axe1_clf["tokenizer"]
+            self.is_axe1_roberta = True
+            self.axe1_clf = axe1_clf["model"]
+        else:
+            self.axe1_clf     = axe1_clf
+            self.is_axe1_roberta = False
+            
         self.axe2_clf     = axe2_clf
         self.axe1_enc_name = axe1_enc_name
         self.axe2_enc_name = axe2_enc_name
@@ -108,8 +116,22 @@ class ArgumentEvaluator:
             EvaluationReport avec les 3 scores
         """
         # 1. Score Axe 1 (convaincance)
-        X1         = self._encode_axe1(generated_text, op_text)
-        axe1_score = float(self.axe1_clf.decision_function(X1)[0])
+        if self.is_axe1_roberta:
+            import torch
+            device = next(self.axe1_model.parameters()).device
+            enc = self.axe1_tokenizer(
+                op_text, generated_text, 
+                truncation=True, max_length=512, 
+                padding='max_length', return_tensors='pt'
+            )
+            input_ids = enc['input_ids'].unsqueeze(1).to(device)
+            attention_mask = enc['attention_mask'].unsqueeze(1).to(device)
+            with torch.no_grad():
+                outputs = self.axe1_model(input_ids=input_ids, attention_mask=attention_mask)
+                axe1_score = float(outputs.logits[0, 0].item())
+        else:
+            X1         = self._encode_axe1(generated_text, op_text)
+            axe1_score = float(self.axe1_clf.decision_function(X1)[0])
 
         # 2. Score Axe 2 (authenticite)
         X2              = self._encode_axe2(generated_text)

@@ -34,9 +34,24 @@ log = logging.getLogger(__name__)
 
 
 def _load_axe1_model(cfg: DictConfig):
-    """Charge le SVM Axe 1 depuis le chemin specifie dans la config."""
+    """Charge le SVM Axe 1 ou RoBERTa depuis le chemin specifie dans la config."""
     model_path = cfg.axe1.model_path
     log.info("Chargement modele Axe 1 : %s", model_path)
+    
+    if model_path.endswith(".pt") or model_path.endswith(".bin") or "roberta" in cfg.axe1.encoder_name.lower():
+        import torch
+        from transformers import RobertaForMultipleChoice, RobertaTokenizer
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        log.info("Chargement de RoBERTa fine-tuned pour l'Axe 1 sur %s...", device)
+        
+        tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
+        model = RobertaForMultipleChoice.from_pretrained('roberta-base')
+        model.load_state_dict(torch.load(model_path, map_location=device))
+        model.to(device)
+        model.eval()
+        
+        return {"model": model, "tokenizer": tokenizer, "type": "roberta_finetuned"}
+        
     with open(model_path, "rb") as f:
         clf = pickle.load(f)
     return clf
