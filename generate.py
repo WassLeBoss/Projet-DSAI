@@ -215,6 +215,76 @@ def main(cfg: DictConfig) -> None:
         log.info("GEN [axe1=%.3f | auth=%.3f] : %s\n",
                  row["axe1_score"], row["axe2_authenticity"], row["generated_text"])
 
+    # ── Visualisation UMAP (Generated vs M4GT) ────────────────────────────────
+    log.info("\n%s\nVISUALISATION UMAP AVEC M4GT\n%s", "=" * 60, "=" * 60)
+    try:
+        import umap
+        import matplotlib.pyplot as plt
+        from scipy import sparse
+        
+        m4gt_cfg = OmegaConf.create({
+            "dataset": {
+                "name": "m4gt",
+                "path": "datasets/M4GT-Bench/SubtaskA.jsonl",
+                "text_col": "text",
+                "label_col": "label",
+                "max_samples": 2000
+            }
+        })
+        from src.data.loader import load_m4gt
+        m4gt_texts, m4gt_labels = load_m4gt(m4gt_cfg)
+        
+        log.info("Encodage de %d textes M4GT avec l'encodeur Axe 2...", len(m4gt_texts))
+        if evaluator.axe2_encoder is not None:
+            X_m4gt = evaluator.axe2_encoder.transform(m4gt_texts)
+        else:
+            X_m4gt = np.vstack([evaluator._encode_axe2(t) for t in m4gt_texts])
+            
+        gen_texts = report_df["generated_text"].tolist()
+        log.info("Encodage de %d textes generes...", len(gen_texts))
+        if evaluator.axe2_encoder is not None:
+            X_gen = evaluator.axe2_encoder.transform(gen_texts)
+        else:
+            X_gen = np.vstack([evaluator._encode_axe2(t) for t in gen_texts])
+        
+        if sparse.issparse(X_m4gt):
+            X_all = sparse.vstack([X_m4gt, X_gen])
+            from sklearn.decomposition import TruncatedSVD
+            X_reduced = TruncatedSVD(n_components=min(50, X_all.shape[1]-1)).fit_transform(X_all)
+        else:
+            X_all = np.vstack([X_m4gt, X_gen])
+            from sklearn.decomposition import PCA
+            X_reduced = PCA(n_components=min(50, X_all.shape[1]-1)).fit_transform(X_all)
+
+        log.info("Calcul UMAP en cours (peut prendre quelques secondes)...")
+        reducer = umap.UMAP(n_components=2, n_neighbors=15, min_dist=0.1, random_state=cfg.seed)
+        coords = reducer.fit_transform(X_reduced)
+        
+        coords_m4gt = coords[:len(m4gt_texts)]
+        coords_gen  = coords[len(m4gt_texts):]
+        y_m4gt = np.array(m4gt_labels)
+        
+        plt.figure(figsize=(10, 7))
+        # M4GT Humain (label 0)
+        mask_hum = y_m4gt == 0
+        plt.scatter(coords_m4gt[mask_hum, 0], coords_m4gt[mask_hum, 1], c="tomato", s=15, alpha=0.4, label="M4GT Humain")
+        # M4GT Machine (label 1)
+        mask_mac = y_m4gt == 1
+        plt.scatter(coords_m4gt[mask_mac, 0], coords_m4gt[mask_mac, 1], c="steelblue", s=15, alpha=0.4, label="M4GT Machine")
+        # Nos generations
+        plt.scatter(coords_gen[:, 0], coords_gen[:, 1], c="lime", s=120, marker="*", edgecolor="black", linewidth=1.5, label="Nos Générations (Axe 3)")
+        
+        plt.title(f"UMAP — Générations vs M4GT ({cfg.axe2.encoder_name.upper()})", fontsize=14, fontweight="bold")
+        plt.xlabel("UMAP 1")
+        plt.ylabel("UMAP 2")
+        plt.legend()
+        plt.tight_layout()
+        
+        umap_path = "umap_generation_m4gt.png"
+        plt.savefig(umap_path, dpi=150)
+        log.info("Visualisation UMAP sauvegardee -> %s", umap_path)
+    except Exception as e:
+        log.error("Impossible de generer l'UMAP avec M4GT : %s", e)
 
 if __name__ == "__main__":
     main()
