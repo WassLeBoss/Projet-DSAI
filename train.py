@@ -16,6 +16,10 @@ Utilisation :
     # Multi-run (sweep sur tous les encodeurs)
     python train.py -m encoder=tfidf,w2v,roberta,features
 
+    # Inclure ou non le texte du post original (op_text) pour TF-IDF/RoBERTa/Word2Vec
+    python train.py include_op=true
+    python train.py include_op=false
+
     # Afficher la config sans lancer l'entraînement
     python train.py --cfg job
 """

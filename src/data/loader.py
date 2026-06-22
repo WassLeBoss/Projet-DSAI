@@ -5,8 +5,23 @@ Usage:
     from src.data.loader import load_wac, load_grid, load_hc3
 """
 
+import os
 import pandas as pd
 from omegaconf import DictConfig
+
+
+def _get_wac_path(cfg: DictConfig) -> str:
+    csv_path = cfg.dataset.csv_path
+    if not os.path.exists(csv_path):
+        if csv_path.endswith("WAC.csv"):
+            alt_path = csv_path.replace("WAC.csv", "WAC_final.csv")
+            if os.path.exists(alt_path):
+                return alt_path
+        elif csv_path.endswith("WAC_final.csv"):
+            alt_path = csv_path.replace("WAC_final.csv", "WAC.csv")
+            if os.path.exists(alt_path):
+                return alt_path
+    return csv_path
 
 
 def load_wac(cfg: DictConfig) -> tuple[list[str], list[int]]:
@@ -17,7 +32,8 @@ def load_wac(cfg: DictConfig) -> tuple[list[str], list[int]]:
         texts  : liste de strings (op_text + text ou text seul)
         labels : liste de int (1 = succès, 0 = échec)
     """
-    df = pd.read_csv(cfg.dataset.csv_path)
+    csv_path = _get_wac_path(cfg)
+    df = pd.read_csv(csv_path)
 
     if cfg.include_op:
         texts = (
@@ -39,7 +55,8 @@ def load_wac_pairs(cfg: DictConfig) -> pd.DataFrame:
     Retourne :
         DataFrame avec colonnes : pair_id, winner_text, loser_text, op_text
     """
-    df = pd.read_csv(cfg.dataset.csv_path)
+    csv_path = _get_wac_path(cfg)
+    df = pd.read_csv(csv_path)
     pairs = []
 
     for pair_id, group in df.groupby("pair_id"):
