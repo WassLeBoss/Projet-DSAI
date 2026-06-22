@@ -13,6 +13,7 @@ do_sample: true
 repetition_penalty: 1.1
 
 # Parametres specifiques au Finetuning (QLoRA)
+max_input_length: 512
 quantize_4bit: true        # Charge le modele en 4-bit NormalFloat
 use_lora: true
 use_gradient_checkpointing: true
