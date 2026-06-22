@@ -1,0 +1,22 @@
+# Configuration pour Qwen (Axe 3)
+name: "qwen"
+
+# ID HuggingFace du modele
+# Utilisé par finetune.py et generate.py
+model_id: "Qwen/Qwen2.5-3B-Instruct"
+
+# Parametres de generation stochastique
+max_new_tokens: 256
+temperature: 0.8
+top_p: 0.9
+do_sample: true
+repetition_penalty: 1.1
+
+# Parametres specifiques au Finetuning (QLoRA)
+quantize_4bit: true        # Charge le modele en 4-bit NormalFloat
+use_gradient_checkpointing: true
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+# Cibles classiques d'attention pour l'architecture Qwen/Llama
+lora_target_modules: ["q_proj", "v_proj", "k_proj", "o_proj"]

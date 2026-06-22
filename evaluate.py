@@ -96,31 +96,33 @@ def main(cfg: DictConfig) -> None:
             X = np.concatenate([X_train, X_test])
         y = np.concatenate([y_train, y_test])
 
-    # ── Réduction t-SNE 2D ───────────────────────────────────────────────────
-    from sklearn.manifold import TSNE
+    # ── Réduction UMAP 2D ───────────────────────────────────────────────────
+    import umap
     
-    # Sous-échantillonnage pour t-SNE (très lent sur 60k points)
-    MAX_SAMPLES = 2000
+    # Sous-échantillonnage pour UMAP (plus rapide que t-SNE, mais utile pour clarté)
+    MAX_SAMPLES = 5000
     if X.shape[0] > MAX_SAMPLES:
-        log.info("Sous-échantillonnage à %d points pour t-SNE...", MAX_SAMPLES)
+        log.info("Sous-échantillonnage à %d points pour UMAP...", MAX_SAMPLES)
         indices = np.random.choice(X.shape[0], MAX_SAMPLES, replace=False)
         X = X[indices]
         y = y[indices]
 
     from scipy import sparse
     if sparse.issparse(X):
-        # SVD préalable recommandée avant t-SNE pour le texte
+        # SVD préalable recommandée avant UMAP pour les grandes dimensions très creuses
         from sklearn.decomposition import TruncatedSVD
         log.info("SVD préalable (50 dimensions)...")
         X_reduced = TruncatedSVD(n_components=min(50, X.shape[1]-1)).fit_transform(X)
     else:
+        # Pour les matrices denses, UMAP gère bien la grande dimension, mais PCA allège le calcul
         from sklearn.decomposition import PCA
         log.info("PCA préalable (50 dimensions)...")
         X_reduced = PCA(n_components=min(50, X.shape[1]-1)).fit_transform(X)
 
-    log.info("Calcul t-SNE en cours (peut prendre 10-30 sec)...")
-    coords = TSNE(n_components=2, perplexity=30, random_state=cfg.seed).fit_transform(X_reduced)
-    title  = f"t-SNE  —  {cfg.encoder.name.upper()}  |  {cfg.dataset.name.upper()}"
+    log.info("Calcul UMAP en cours...")
+    reducer = umap.UMAP(n_components=2, n_neighbors=15, min_dist=0.1, random_state=cfg.seed)
+    coords = reducer.fit_transform(X_reduced)
+    title  = f"UMAP  —  {cfg.encoder.name.upper()}  |  {cfg.dataset.name.upper()}"
 
     # ── Tracé ────────────────────────────────────────────────────────────────
     palette = {1: ("steelblue", "Positif / Succès"), 0: ("tomato", "Négatif / Échec")}

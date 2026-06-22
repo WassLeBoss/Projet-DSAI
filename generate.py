@@ -157,6 +157,12 @@ def main(cfg: DictConfig) -> None:
     report_df.to_csv(report_path, index=False)
     log.info("Rapport sauvegarde -> %s", report_path)
 
+    import math
+    def sigmoid(x):
+        # Clip pour éviter les overflows mathématiques si le score est trop extrême
+        x = max(min(x, 100), -100)
+        return 1 / (1 + math.exp(-x))
+
     # Sauvegarde version HTML lisible
     html_path = "generation_report.html"
     html_style = """
@@ -175,18 +181,25 @@ def main(cfg: DictConfig) -> None:
     """
     
     html_content = f"<!DOCTYPE html>\n<html>\n<head><meta charset='utf-8'>{html_style}</head>\n<body>\n<h2>Rapport de Generation - Axe 3</h2>\n"
-    html_content += "<table>\n<tr><th>OP (Message original)</th><th>Reponse de l'IA (LLM)</th><th>Score Axe 1 (Convaincant > 0)</th><th>Score Axe 2 (Humain < 0)</th></tr>\n"
+    html_content += "<table>\n<tr><th>OP (Message original)</th><th>Reponse de l'IA (LLM)</th><th>Axe 1 (% Convaincant)</th><th>Axe 2 (% Généré par IA)</th></tr>\n"
     
     for _, row in report_df.iterrows():
-        a1_class = "score-good" if row['axe1_score'] > 0 else "score-bad"
-        a2_class = "score-good" if row['axe2_authenticity'] < 0 else "score-bad"
+        # Transformation Sigmoïde des logits SVM vers [0, 1] puis pourcentage
+        p_convincing = sigmoid(row['axe1_score']) * 100
+        p_ai = sigmoid(row['axe2_authenticity']) * 100
+        
+        # Axe 1 : > 50% = Convaincant (Vert)
+        a1_class = "score-good" if p_convincing > 50 else "score-bad"
+        
+        # Axe 2 : < 50% = Humain (Vert, car on veut tromper l'Axe 2), > 50% = IA détectée (Rouge)
+        a2_class = "score-good" if p_ai < 50 else "score-bad"
         
         html_content += f"""
         <tr>
             <td class="text-cell">{str(row['op_text']).replace('<', '&lt;')}</td>
             <td class="text-cell">{str(row['generated_text']).replace('<', '&lt;')}</td>
-            <td class="score-cell {a1_class}">{row['axe1_score']:.3f}</td>
-            <td class="score-cell {a2_class}">{row['axe2_authenticity']:.3f}</td>
+            <td class="score-cell {a1_class}">{p_convincing:.1f}%</td>
+            <td class="score-cell {a2_class}">{p_ai:.1f}%</td>
         </tr>
         """
     html_content += "</table>\n</body>\n</html>"
