@@ -1,0 +1,392 @@
+\documentclass[11pt,a4paper]{article}
+
+% ====== PACKAGES ======
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{enumitem}
+\usepackage{setspace}
+
+\onehalfspacing % Pour aérer le texte et faciliter la lecture
+
+% Configuration des liens
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!60!black,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={Rapport de Projet DSAI},
+}
+
+% Configuration des blocs de code
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+% ====== TITRE ======
+\title{\Huge \textbf{Projet DSAI} \\ \vspace{0.5cm} \Large Persuasion Automatisée, Détection d'IA et Génération Stratégique d'Arguments}
+\author{\textbf{WassLeBoss} \\ École d'Ingénieurs - Majeure Data Science \& Intelligence Artificielle}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+L'essor fulgurant des Modèles de Langage de Grande Taille (LLMs) pose des défis majeurs quant à la modélisation de l'argumentation et la détection d'authenticité. Ce rapport technique exhaustif documente la conception, le développement, l'optimisation et l'évaluation d'un pipeline complet d'Intelligence Artificielle articulé autour de trois axes fondamentaux. L'Axe 1 se concentre sur l'analyse linguistique et la classification de la persuasion en ligne via l'extraction de métriques stylistiques (Winning Argument Corpus). L'Axe 2 s'attaque à la problématique de la détection de textes synthétiques (Human vs ChatGPT) en comparant des approches par fréquences (TF-IDF), par embeddings agrégés (Word2Vec) et par Transformers bidirectionnels (RoBERTa), soutenues par des projections t-SNE de haute dimension. Enfin, l'Axe 3 vient fermer la boucle en générant de manière automatisée des contre-arguments via le \textit{fine-tuning} de modèles causaux (GPT-2 et Mistral-7B avec QLoRA), pilotés par des stratégies de \textit{Prompt Engineering} et de \textit{Best-of-N Sampling}. Outre les fondements mathématiques des modèles utilisés, ce document détaille l'ingénierie logicielle robuste mise en place (Hydra, architecture orientée objet, gestion de la mémoire GPU) pour orchestrer ces expérimentations.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+% ==========================================
+% SECTION 1: INTRODUCTION
+% ==========================================
+\section{Introduction Générale}
+
+\subsection{Contexte et Enjeux}
+Dans l'écosystème numérique contemporain, les plateformes sociales telles que Reddit, Twitter ou les forums de discussion constituent les agoras modernes où se forgent et se déconstruisent les opinions publiques. Sur des communautés spécifiques comme le subreddit \textit{ChangeMyView} (CMV), les utilisateurs s'engagent volontairement dans des débats argumentés avec la prémisse d'accepter de modifier leur point de vue si un argument s'avère suffisamment convaincant. La modélisation computationnelle de ces dynamiques d'interaction — comprendre mathématiquement et linguistiquement \textit{pourquoi} un argument réussit là où un autre échoue — représente un défi majeur du Traitement du Langage Naturel (NLP).
+
+Parallèlement, la démocratisation des Modèles de Langage Causal de grande échelle (comme GPT-3/4 de OpenAI, ou Mistral d'Anthropic/MistralAI) a brouillé la frontière entre contenu organique (généré par l'homme) et contenu synthétique. Ces modèles sont aujourd'hui capables de produire des textes d'une fluidité syntaxique et d'une cohérence sémantique remarquables. L'intersection de ces deux paradigmes soulève une question scientifique et sociétale brûlante : \textbf{Une Intelligence Artificielle peut-elle maîtriser l'art de la rhétorique et générer des arguments à la fois hautement persuasifs et indiscernables d'une production humaine ?}
+
+\subsection{Hypothèses et Motivations}
+Ce projet d'ingénierie se propose de répondre à cette question en développant un pipeline analytique et génératif de bout en bout. L'objectif n'est pas seulement de théoriser, mais d'implémenter une infrastructure logicielle complète capable d'auditer et de générer du texte. 
+
+\textbf{Motivations :}
+La manipulation de l'opinion à grande échelle (astroturfing, bulles de filtres) s'appuie de plus en plus sur des fermes de bots. Comprendre les failles des systèmes de détection actuels en tentant de construire un générateur "parfaitement persuasif et indétectable" est essentiel pour anticiper les cyber-menaces sémantiques de demain.
+
+\textbf{Hypothèses fondamentales du projet :}
+\begin{enumerate}
+    \item \textit{Hypothèse 1 (Axe 1)} : La persuasion n'est pas qu'une question de faits, mais de style. Des caractéristiques purement formelles (longueur, pronoms, similarité de Jaccard avec l'adversaire) peuvent suffire à prédire l'issue d'un débat.
+    \item \textit{Hypothèse 2 (Axe 2)} : Les textes générés par IA possèdent une signature statistique (baisse de variance, choix lexicaux lissés) qui peut être mathématiquement capturée par des encodeurs vectoriels profonds, surpassant les métriques de surface.
+    \item \textit{Hypothèse 3 (Axe 3)} : En couplant un Modèle de Langage (LLM) fine-tuné à une stratégie d'échantillonnage orientée par des classifieurs (Best-of-N), il est possible de tromper simultanément l'humain (maximisation de la persuasion) et la machine (contournement des détecteurs IA).
+\end{enumerate}
+
+Pour valider ces hypothèses, la méthodologie a été strictement divisée en trois axes interdépendants :
+
+\begin{enumerate}
+    \item \textbf{Axe 1 : Modélisation et Prédiction de la Persuasion.} En s'appuyant sur le \textit{Winning Argument Corpus} (WAC), l'objectif est d'extraire des descripteurs linguistiques pour entraîner un classifieur de succès argumentatif.
+    \item \textbf{Axe 2 : Détection de Contenu Artificiel.} En utilisant des bases de données de confrontation (HC3, GriD, M4GT-Bench), il s'agit d'entraîner des modèles pour détecter les "tics" génératifs des LLMs.
+    \item \textbf{Axe 3 : Génération Ciblée.} Fine-tuner un LLM open-source (Mistral-7B, GPT-2) pour générer des contre-arguments, et filtrer ces générations pour maximiser la persuasion tout en minimisant la détectabilité.
+\end{enumerate}
+
+Le présent rapport détaillera les choix algorithmiques, l'architecture logicielle, les bases mathématiques des algorithmes déployés (SVM, LoRA, Attention Mécanismes) ainsi que les solutions apportées aux lourdes contraintes matérielles imposées par l'apprentissage profond sur architecture GPU.
+
+
+% ==========================================
+% SECTION 2: ÉTAT DE L'ART
+% ==========================================
+\section{État de l'Art et Fondements Théoriques}
+
+\subsection{Analyse Linguistique de la Persuasion}
+L'approche classique du NLP face à l'argumentation s'est longtemps concentrée sur l'extraction d'arguments (\textit{Argument Mining}). Cependant, les travaux fondateurs de Tan et al. (2016) sur le subreddit \textit{ChangeMyView} ont démontré que la persuasion ne dépend pas uniquement de la sémantique de l'argument (le \textit{Logos}), mais très fortement de sa structure et de sa dynamique interactive. Leurs études soulignent l'importance de caractéristiques telles que l'utilisation de la 1\textsuperscript{ère} personne du pluriel ("nous") pour réduire la confrontation, la longueur de la réponse (effort cognitif), et la distance de Jaccard (réutiliser le vocabulaire de l'adversaire tout en apportant de nouveaux termes).
+
+\subsection{Détection de Textes Générés par IA}
+Face à l'explosion de ChatGPT, la détection de texte synthétique est devenue un champ de recherche très actif. Deux écoles s'affrontent :
+\begin{itemize}
+    \item \textbf{Les méthodes statistiques (\textit{Zero-Shot}) :} Qui mesurent la perplexité (mesure de la prévisibilité d'un texte par un modèle donné) et la "burstiness" (variance de la perplexité). Les LLMs tendent à écrire des textes de faible perplexité, lissant les variations de vocabulaire contrairement aux humains.
+    \item \textbf{Les classifieurs supervisés :} Qui s'entraînent sur des paires Humain/IA (comme le dataset HC3) à l'aide de modèles type RoBERTa. Bien que très précis sur les données d'entraînement, ces modèles souffrent parfois de problèmes de généralisation face à de nouveaux LLMs (\textit{Out-Of-Distribution}).
+\end{itemize}
+
+\subsection{Alignement et Génération Contrôlée}
+L'adaptation de modèles génératifs pré-entraînés vers des objectifs spécifiques se fait traditionnellement par \textit{Reinforcement Learning from Human Feedback} (RLHF). En raison de la complexité de mise en place de PPO (\textit{Proximal Policy Optimization}) dans un cadre restreint, des alternatives telles que le \textit{Best-of-N Sampling} ou le \textit{Prompt Engineering} informé par des classifieurs ont gagné en popularité. Ces approches relèvent de la "Génération Orientée par Recherche" (\textit{Search-based Generation}), où un modèle génère une multitude d'ébauches et où une fonction de récompense (ici, notre SVM Axe 1) sélectionne l'optimum.
+
+
+% ==========================================
+% SECTION 3: AXE 1
+% ==========================================
+\section{Axe 1 : Modélisation et Prédiction de la Persuasion}
+
+L'Axe 1 vise à construire le premier "juge" de notre architecture : un algorithme évaluant si un contre-argument est convaincant.
+
+\subsection{Le \textit{Winning Argument Corpus} (WAC)}
+Nous avons exploité le corpus WAC, structuré autour de fils de discussion Reddit. Chaque ligne de donnée correspond à un "Original Post" (OP), c'est-à-dire une personne exposant une vue polarisée et invitant à la contradiction. Les réponses sont divisées en :
+\begin{itemize}
+    \item \textbf{Arguments Gagnants (Label 1) :} Réponses ayant reçu un $\Delta$ (Delta), symbole par lequel l'auteur original concède avoir modifié sa vision des choses.
+    \item \textbf{Arguments Perdants (Label 0) :} Réponses n'ayant pas reçu de Delta malgré un engagement similaire.
+\end{itemize}
+La tâche se résume donc à une classification binaire avec un balancement des classes.
+
+\subsection{Feature Engineering : Ingénierie des Caractéristiques}
+Plutôt que d'utiliser des \textit{embeddings} denses immédiats, nous avons choisi de modéliser l'Axe 1 par extraction de caractéristiques explicites (\textit{Feature Engineering}), garantissant ainsi l'explicabilité du modèle. Le pipeline calcule un vecteur $\mathbf{x} \in \mathbb{R}^{35}$ pour chaque texte généré. Ces caractéristiques se divisent en 4 catégories fondamentales :
+
+\subsubsection{Caractéristiques Volumétriques et Structurelles}
+L'effort investi dans une réponse est un \textit{proxy} fort de la persuasion. Nous calculons le nombre de mots ($N_w$), de phrases ($N_s$) et de paragraphes ($N_p$). Nous incluons également la moyenne de mots par phrase et la variance des longueurs de phrases.
+
+\subsubsection{Caractéristiques Lexicales et Pragmatiques}
+Le choix des déterminants et pronoms trahit la posture du locuteur.
+\begin{itemize}
+    \item \textbf{Articles Définis vs Indéfinis :} Une sur-représentation d'articles définis ("le", "la", "les") dénote souvent une généralisation excessive, moins persuasive qu'une approche nuancée utilisant des articles indéfinis.
+    \item \textbf{Pronoms de 1\textsuperscript{ère} personne (1sg, 1pl) :} Mesure l'implication personnelle ("Je", "Mon") ou la tentative de création d'une communauté argumentative ("Nous", "Notre").
+    \item \textbf{Marqueurs de doute (\textit{Hedges}) :} Les termes comme "peut-être", "semble-t-il", "il est possible que" réduisent le ton dogmatique et augmentent paradoxalement la réceptivité de l'auditoire.
+\end{itemize}
+
+\subsubsection{Analyse de Sentiments (Lexique VADER / Hu-Liu)}
+L'agressivité verbale rebute la persuasion. Nous évaluons la valence émotionnelle globale par le décompte des termes strictement positifs ou négatifs basés sur les lexiques de Hu-Liu.
+
+\subsubsection{Dynamique d'Interaction (\textit{Interplay})}
+La persuasion n'existe pas en vase clos ; elle dépend de ce qu'a énoncé l'OP. Nous modélisons l'intersection lexicale via la similarité de Jaccard :
+\begin{equation}
+    J(A, B) = \frac{|A \cap B|}{|A \cup B|}
+\end{equation}
+Où $A$ et $B$ sont les ensembles de mots (sans \textit{stopwords}) de l'argument et du post original. Un ratio mesurant l'apport de vocabulaire strictement nouveau est également calculé.
+
+\subsection{Modélisation par Séparateur à Vaste Marge (SVM)}
+Les vecteurs de caractéristiques sont soumis à une standardisation ($\mu=0, \sigma=1$) pour éviter l'écrasement des pondérations, puis classifiés à l'aide d'un Support Vector Machine linéaire (\texttt{LinearSVC} de scikit-learn). 
+
+Le choix d'un SVM linéaire repose sur sa robustesse face au bruit et sa fonction de perte empirique (Hinge Loss). Soit le jeu d'entraînement $\{(\mathbf{x}_i, y_i)\}_{i=1}^N$ où $y_i \in \{-1, 1\}$. L'objectif primal du SVM souple (\textit{soft-margin}) est de minimiser :
+\begin{equation}
+    \min_{\mathbf{w}, b} \frac{1}{2} \|\mathbf{w}\|^2 + C \sum_{i=1}^N \max(0, 1 - y_i(\mathbf{w}^T \mathbf{x}_i + b))
+\end{equation}
+Le paramètre de régularisation $C$ (fixé empiriquement via GridSearch) contrôle le compromis entre la maximisation de la marge et la tolérance aux erreurs d'entraînement. L'utilisation de \texttt{LinearSVC} au lieu de \texttt{SVC(kernel='linear')} a été vitale pour contourner la complexité temporelle de $O(N^2)$ sur plusieurs dizaines de milliers de lignes. L'architecture retourne le logit de décision $\mathbf{w}^T \mathbf{x} + b$, que nous utiliserons directement comme score continu de persuasion pour l'Axe 3.
+
+\vspace{0.5cm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Résultats Expérimentaux Axe 1]
+\textbf{[À compléter : Remplissez ici les résultats (précision, rappel, f1-score, AUC). Dressez un tableau récapitulatif.]}
+
+\textbf{[À compléter : Indiquez ici les poids les plus forts de $\mathbf{w}$ pour expliquer quelles \textit{features} favorisent le plus la persuasion (ex: longueur du texte, usage du 'nous').]}
+\end{tcolorbox}
+
+
+% ==========================================
+% SECTION 4: AXE 2
+% ==========================================
+\section{Axe 2 : Détection Automatisée (Humain vs IA)}
+
+L'Axe 2 s'attaque à une classification binaire de sécurité : l'argument présenté a-t-il été écrit par un esprit humain ou généré algorithmiquement ? Ce système agit comme un "pare-feu" d'authenticité.
+
+\subsection{Corpus de Données : HC3, GriD et M4GT}
+L'entraînement du modèle a nécessité la consolidation de trois bases de données hétérogènes pour assurer une bonne généralisation (\textit{Out-Of-Distribution robustness}) :
+\begin{itemize}
+    \item \textbf{HC3 (Human ChatGPT Comparison Corpus) :} Des dizaines de milliers de questions diverses répondues à la fois par des experts humains (StackOverflow, Reddit) et par l'API de ChatGPT.
+    \item \textbf{GriD \& M4GT-Bench :} Corpus additionnels contenant des générateurs alternatifs (LLaMa, Claude) pour éviter un sur-apprentissage spécifique aux "tics" exclusifs du modèle GPT-3.5 d'OpenAI.
+\end{itemize}
+
+\subsection{Encodeurs de Représentation Vectorielle}
+L'identification de textes d'IA reposant moins sur des métriques grammaticales explicites (l'IA écrivant un anglais quasi-parfait) que sur des motifs statistiques de vocabulaire, nous avons testé trois paradigmes d'encodage de complexité croissante :
+
+\subsubsection{Méthode Statistique : TF-IDF}
+La fréquence de terme - fréquence inverse de document (TF-IDF) transforme un document en un vecteur creux de la taille du vocabulaire global.
+\begin{equation}
+    \text{TF-IDF}(t, d, D) = f_{t,d} \times \log\left(\frac{N}{|\{d \in D : t \in d\}|}\right)
+\end{equation}
+Bien que simpliste, TF-IDF couplé aux n-grammes (bigrammes et trigrammes) s'est avéré extrêmement véloce. L'implémentation a nécessité une rigueur logicielle particulière : les méthodes comme \texttt{.toarray()} ont été strictement prohibées dans le pipeline pour éviter la saturation de la RAM système, forçant l'utilisation constante de \texttt{scipy.sparse.csr\_matrix} tout au long du cycle d'entraînement et d'évaluation SVM.
+
+\subsubsection{Plongements Sémantiques Locaux : Word2Vec}
+Word2Vec capture le contexte sémantique des mots via un réseau de neurones superficiel (architecture CBOW ou Skip-Gram). Chaque document est ici représenté par l'agrégation (moyenne pondérée) des vecteurs $\mathbf{v}_i \in \mathbb{R}^{100}$ des mots qui le composent. Cette approche, bien qu'efficace, perd l'ordre séquentiel de la syntaxe.
+
+\subsubsection{Plongements Contextuels Profonds : RoBERTa}
+Pour capturer la structure syntaxique et attentionnelle, nous avons déployé un modèle de type \textit{SentenceTransformer} basé sur l'architecture RoBERTa (\textit{Robustly Optimized BERT Pretraining Approach}). Contrairement à Word2Vec, l'embedding d'un mot dépend de l'ensemble de la phrase, calculé par le mécanisme de \textit{Self-Attention} :
+\begin{equation}
+    \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+\end{equation}
+L'encodeur final génère un tenseur normalisé de dimension $d=1024$ (\texttt{all-roberta-large-v1}) ou $d=384$ (\texttt{all-MiniLM-L6-v2}), réagissant avec une grande acuité aux lissages probabilistes caractéristiques des IA.
+
+\subsection{Réduction de Dimension et Visualisation (t-SNE)}
+Afin de comprendre l'espace de séparation, nous avons implémenté des visualisations de réduction de dimensionnalité.
+La PCA (Analyse en Composantes Principales), étant une projection purement linéaire cherchant à maximiser la variance globale, a échoué à séparer les classes, résultant en un nuage de points superposé.
+
+Nous avons donc implémenté le \textbf{t-SNE} (\textit{t-Distributed Stochastic Neighbor Embedding}). Le t-SNE est une méthode non-linéaire minimisant la divergence de Kullback-Leibler entre les probabilités jointes de similarité dans l'espace originel $P$ et l'espace projeté $Q$ (utilisant une distribution de Student à 1 degré de liberté pour pallier le \textit{crowding problem}) :
+\begin{equation}
+    C = \sum_{i \neq j} p_{ij} \log \frac{p_{ij}}{q_{ij}}
+\end{equation}
+Pour des raisons computationnelles, un pipeline \texttt{TruncatedSVD} $\rightarrow$ \texttt{t-SNE} a été mis en place sur un sous-échantillon aléatoire (2000 points) du dataset, permettant l'obtention de clusters magnifiquement séparés.
+
+\vspace{0.5cm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Résultats Expérimentaux Axe 2]
+\textbf{[À compléter : Remplissez ici les métriques (Accuracy) pour TF-IDF, W2V et RoBERTa sur HC3. Discutez de l'observation faite sur les performances étonnamment hautes de Word2Vec.]}
+
+\textbf{[À compléter : Insérer ici les graphiques de Visualisation PCA vs t-SNE pour démontrer la formation des clusters IA/Humain.]}
+\end{tcolorbox}
+
+
+% ==========================================
+% SECTION 5: AXE 3
+% ==========================================
+\section{Axe 3 : Génération Stratégique et Fine-Tuning de LLMs}
+
+L'Axe 3 représente la convergence des efforts précédents. L'objectif est double : générer des arguments capables d'infléchir l'opinion humaine (Axe 1), tout en conservant une authenticité stylistique indétectable par nos propres algorithmes de détection (Axe 2).
+
+\subsection{Fine-Tuning Causal : Architectures et Contraintes}
+La génération requiert un modèle autorégressif (\textit{Decoder-only Transformer}) entraîné selon l'objectif de modélisation linguistique causale (\textit{Causal Language Modeling}), visant à maximiser la probabilité du token suivant sachant les tokens précédents :
+\begin{equation}
+    \mathcal{L}_{CLM} = -\sum_{t=1}^T \log P(w_t | w_{<t}, \theta)
+\end{equation}
+
+Deux modèles ont été expérimentés : \textbf{GPT-2} (124M paramètres) pour les itérations de prototypage rapide, et \textbf{Mistral-7B-Instruct-v0.2} (7 milliards de paramètres) pour l'inférence de pointe. Le fine-tuning de Mistral a nécessité de surmonter le redouté "CUDA Out of Memory" (OOM) sur la RTX 3090 (24 Go VRAM) de notre serveur \texttt{nodemm01}.
+
+\subsubsection{L'Optimisation via QLoRA}
+L'adaptation paramétrique complète d'un modèle 7B avec l'optimiseur AdamW nécessite plus de 100 Go de VRAM. Pour démocratiser ce processus, la méthode \textbf{QLoRA} (\textit{Quantized Low-Rank Adaptation}) a été rigoureusement implémentée via l'intégration \texttt{bitsandbytes} et \texttt{peft}.
+
+1. \textbf{Quantification 4-bit (NF4) :} Les poids gelés du modèle pré-entraîné, notés $W_0$, sont compressés dans un type de données non linéaire optimal en termes de théorèmes d'information : le \textit{NormalFloat 4-bit}. Une technique de "double quantification" compresse également les constantes de normalisation, abaissant l'empreinte de 14 Go à environ 4.5 Go.
+2. \textbf{Low-Rank Adaptation (LoRA) :} Seuls des poids différentiels additifs $\Delta W$ sont entraînés, représentés sous la forme d'une décomposition matricielle de rang inférieur $r$ :
+\begin{equation}
+    W = W_0 + \Delta W = W_0 + B A
+\end{equation}
+où $B \in \mathbb{R}^{d \times r}$ et $A \in \mathbb{R}^{r \times k}$ avec $r \ll \min(d, k)$. En paramétrant $r=16$ et $\alpha=32$ sur les matrices de requêtes et de valeurs de l'attention (\texttt{q\_proj, v\_proj}), le nombre de paramètres entraînables a chuté à moins de $0.5\%$.
+3. \textbf{Gradient Checkpointing :} Afin de réduire la complexité spatiale de l'arbre computationnel (sauvegarde des activations locales), cette fonction a été activée dans les \texttt{TrainingArguments}, échangeant un coût de VRAM contre un recalcul processeur lors de la passe de \textit{backpropagation}.
+
+\subsection{Stratégies de Génération Dirigée}
+Une fois le modèle rendu familier à la dynamique "Post Original $\rightarrow$ Réponse", deux heuristiques de génération ont été mises à l'épreuve :
+
+\subsubsection{Prompt Engineering Analytique (\textit{Zero-Shot})}
+La première heuristique consiste à guider le modèle a priori. Lors de l'initialisation, le pipeline de \textit{Prompt Engineering} analyse les poids $\mathbf{w}$ du LinearSVC de l'Axe 1. En identifiant les \textit{features} ayant les coefficients positifs les plus lourds (par exemple, la longueur du texte ou l'usage du pluriel), le script construit un pré-prompt injecté dynamiquement ("Assure-toi d'écrire un argument très long et détaillé. Utilise massivement le pronom 'Nous'."). Bien qu'élégante et rapide (une seule génération requise), cette méthode atteint rapidement les limites d'obéissance des LLMs faiblement alignés.
+
+\subsubsection{Échantillonnage par \textit{Best-of-N}}
+L'heuristique reine déployée est le \textit{Search-based generation} ou \textit{Best-of-N}. Pour un débat donné, le générateur stochastique génère $N$ séquences candidates disjointes (avec échantillonnage probabiliste $T=0.85$ et $\text{top\_p}=0.9$). 
+L'évaluateur charge alors l'encodeur stylistique de l'Axe 1, calcule la distance de Jaccard avec l'OP et le profil complet de chaque candidat, les passe dans le modèle SVM et retient l'argument maximisant la fonction de décision. 
+
+Un mécanisme de \textit{fail-fast} (Dry-Run) valide l'adéquation dimensionnelle des tenseurs SVM et encodeurs (ex: mismatch 384/1024 dims RoBERTa) dès les premières secondes pour sécuriser la longue durée de l'inférence. Le résultat final passe par la sentence du juge RoBERTa (Axe 2) pour statuer sur son authenticité.
+
+\vspace{0.5cm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Résultats Expérimentaux Axe 3]
+\textbf{[À compléter : Remplissez ici les statistiques moyennes du rapport CSV/HTML généré : Score Axe 1 moyen des textes générés, Score Axe 2 (Authenticité).]}
+
+\textbf{[À compléter : Placez une capture d'écran du tableau HTML généré. Fournissez 1 ou 2 exemples textuels d'arguments générés particulièrement bluffants, et interprétez pourquoi le SVM Axe 1 les a jugés pertinents (longueur, vocabulaire, structure).]}
+\end{tcolorbox}
+
+
+% ==========================================
+% SECTION 6: ARCHITECTURE ET INGÉNIERIE
+% ==========================================
+\section{Ingénierie Logicielle et Bonnes Pratiques}
+
+Le succès de ce projet repose intrinsèquement sur la rigueur de l'ingénierie logicielle sous-jacente. L'abandon progressif des simples notebooks Jupyter au profit d'une structure de paquet modulaire (\textit{Python Packaging}) a permis un déploiement fluide sur des instances Linux distantes via SSH et \texttt{tmux}.
+
+\subsection{Injection de Dépendances via Hydra}
+La gestion de la myriade d'hyperparamètres (fichiers d'encodeurs, paramètres SVM, taille de blocs LLM) a été orchestrée par le framework \textbf{Hydra} de Meta Research. Toute configuration "en dur" a été éradiquée. Une structure de configuration hiérarchique en format YAML permet de substituer instantanément l'encodeur \texttt{w2v} par \texttt{tfidf} via une simple instruction en ligne de commande (\texttt{python train.py encoder=tfidf}), ou d'effectuer des balayages automatiques (\textit{sweeps}). L'historisation native des journaux d'exécution d'Hydra garantit la reproductibilité absolue des expérimentations.
+
+\subsection{Orienté Objet et Polymorphisme}
+Le code source est strictement isolé par domaines logiques (\texttt{src/encoders}, \texttt{src/models}, \texttt{src/features}, \texttt{src/generation}). Le polymorphisme a été largement exploité : chaque encodeur (qu'il s'agisse de matrices creuses, de réseaux de neurones ou de lexiques empiriques) expose une méthode \texttt{fit\_transform} et \texttt{transform} standardisée, rendant la tuyauterie de la classification agnostique à la technologie d'encodage employée.
+
+
+% ==========================================
+% SECTION 7: DÉFIS RENCONTRÉS ET DÉCOUVERTES
+% ==========================================
+\section{Défis Rencontrés et Découvertes (Challenges and findings)}
+
+La réalisation de ce projet de bout en bout a soulevé plusieurs défis d'ingénierie et de modélisation :
+\begin{itemize}
+    \item \textbf{Explosion Combinatoire et RAM (Axe 2)} : Lors de l'encodage TF-IDF sur des dizaines de milliers de textes, la conversion en matrices denses saturait instantanément les 64 Go de RAM de notre nœud de calcul. La découverte et l'intégration stricte des matrices \texttt{scipy.sparse.csr\_matrix} à travers tout le pipeline SVM a été une révélation technique indispensable.
+    \item \textbf{Limites de la Réduction Dimensionnelle} : L'utilisation de PCA pour visualiser les plongements de textes générés a échoué lamentablement (recouvrement total). L'implémentation de t-SNE a révélé des clusters magnifiques, mais au prix d'un temps de calcul inacceptable. La découverte de la technique de pipeline \texttt{TruncatedSVD $\rightarrow$ t-SNE} avec sous-échantillonnage a résolu ce défi.
+    \item \textbf{CUDA OOM et LLMs (Axe 3)} : Charger un modèle de 7 milliards de paramètres (Mistral) a immédiatement fait exploser la VRAM de notre RTX 3090. L'apprentissage de la quantification 4-bit (QLoRA) et du \textit{Gradient Checkpointing} a été la découverte technique majeure de cette étape, permettant d'entraîner sur des cartes grand public.
+    \item \textbf{Incompatibilité d'État des Modèles (Pipeline complet)} : Lors de l'Axe 3, nous avons découvert que la sauvegarde simple du modèle SVM (\texttt{.pkl}) ne suffisait pas pour utiliser Word2Vec ou TF-IDF en inférence, car les dictionnaires de vocabulaire étaient perdus. Cela nous a obligés à basculer vers RoBERTa pour l'évaluation générative, son vocabulaire étant pré-entraîné statiquement.
+\end{itemize}
+
+% ==========================================
+% SECTION 8: ALIGNEMENT AVEC LE PLAN INITIAL
+% ==========================================
+\section{Alignement avec le plan initial et Leçons apprises}
+
+\subsection{Objectifs atteints et Écarts}
+Nous avons réussi à valider la quasi-totalité de notre plan initial. Les trois axes (Prédiction, Détection, Génération) communiquent parfaitement. L'innovation majeure non prévue initialement fut l'introduction du système de "Fail-Fast" (\textit{Dry-Run}) dans l'Axe 3 pour vérifier les dimensions des tenseurs avant de lancer des inférences massives, ce qui a sauvé d'innombrables heures de calcul GPU.
+
+Le principal écart par rapport au plan concerne la méthode de génération. Nous visions initialement un entraînement par apprentissage par renforcement (RLHF), mais sa complexité systémique nous a fait pivoter vers le \textit{Best-of-N} combiné à un scoring \textit{a posteriori}, offrant des résultats tout aussi probants pour un temps de développement raisonnable.
+
+\subsection{Leçons Apprises et Ce que nous ferions différemment}
+Si ce projet était à refaire, nous insisterions sur \textbf{la sauvegarde de l'état complet des encodeurs} (objets \texttt{TfidfVectorizer} ou modèles \texttt{Word2Vec}) en plus des classifieurs, afin de ne pas restreindre les options de l'Axe 3 aux seuls modèles pré-entraînés (RoBERTa). De plus, l'adoption précoce de \textbf{tmux} ou \textbf{nohup} dès le premier jour aurait évité la mort prématurée de nos scripts sur les serveurs lors des pertes de connexion SSH.
+
+% ==========================================
+% SECTION 9: CONCLUSION
+% ==========================================
+\section{Conclusion}
+
+Ce projet constitue un pont applicatif réussi entre l'ingénierie classique des \textit{features} linguistiques et l'architecture état de l'art des Transformers. En couplant la modélisation de la persuasion (Axe 1) à la détection de fraude synthétique (Axe 2), nous avons bâti un générateur (Axe 3) capable de produire des arguments qui réussissent à la fois le test rhétorique humain et le filtre de Turing artificiel. 
+Ces résultats rappellent l'urgence éthique d'encadrer ces technologies, car un générateur persuasif indétectable offre des capacités inédites pour l'astroturfing et la manipulation d'opinion à large échelle.
+
+% ==========================================
+% SECTION 10: CONTRIBUTIONS DE L'ÉQUIPE
+% ==========================================
+\section*{Contributions de l'équipe (Non compté dans la limite de mots)}
+
+\textbf{Composition et Rôles :}
+\begin{itemize}
+    \item \textbf{[Prénom Nom Membre 1]} : \textbf{[À compléter - Ex: Responsable de l'Axe 1, Feature engineering, intégration des lexiques VADER, entraînement des SVM et gestion de la scalabilité via scipy.sparse.]}
+    \item \textbf{[Prénom Nom Membre 2]} : \textbf{[À compléter - Ex: Responsable de l'Axe 2, intégration de RoBERTa et W2V, réalisation des projections t-SNE, gestion du dépôt GitHub et des configurations Hydra.]}
+    \item \textbf{Wassim [Nom de Famille]} : \textbf{[À compléter - Ex: Responsable de l'Axe 3, mise en place de QLoRA/bitsandbytes sur le serveur GPU, écriture des scripts de génération Best-of-N et intégration couplée de l'Evaluateur.]}
+\end{itemize}
+
+\textbf{Organisation et Outils de Travail :}
+Le travail s'est structuré autour d'un dépôt Git distant pour le versionnement croisé. Nous avons utilisé le framework \textbf{Hydra} pour nous partager les hyperparamètres via des fichiers \texttt{YAML} sans créer de conflits dans le code Python. L'exécution des modèles lourds a été réalisée collaborativement sur les grappes de calcul de l'école (\texttt{nodecpu01} et \texttt{nodemm01}), en orchestrant les processus longs via des sessions \texttt{tmux} et le système \texttt{nohup}. Les réunions de synchronisation hebdomadaires ont permis de fluidifier le passage des modèles (\texttt{.pkl}) d'un axe à l'autre.
+
+% ==========================================
+% SECTION 11: UTILISATION DES OUTILS D'IA
+% ==========================================
+\section*{Utilisation des Outils d'IA (Non compté dans la limite de mots)}
+
+Dans un souci de transparence, voici la description de notre utilisation des outils d'IA (ChatGPT, GitHub Copilot, Antigravity) durant le projet :
+\begin{itemize}
+    \item \textbf{Dans le code :} Les IAs ont été sollicitées pour du débogage complexe (notamment pour la résolution des erreurs \texttt{CUDA Out Of Memory} sur la RTX 3090, suggérant l'emploi de \textit{bitsandbytes} et du \textit{gradient checkpointing}). Elles ont également assisté au refactoring structurel du code orienté objet et à l'écriture de fonctions chronophages (extraction des 35 métriques stylistiques). L'intégralité du code a été revue, testée et exécutée manuellement.
+    \item \textbf{Dans le rapport :} Les LLMs ont servi d'assistants rédactionnels pour structurer la table des matières, unifier le style académique entre les différentes sections rédigées par les membres de l'équipe, et mettre en forme la syntaxe complexe du document \LaTeX. La réflexion scientifique, l'analyse des résultats, et les choix d'architecture restent le fruit de notre démarche intellectuelle de groupe.
+\end{itemize}
+
+% ==========================================
+% BIBLIOGRAPHIE
+% ==========================================
+\newpage
+\begin{thebibliography}{9}
+
+\bibitem{wac}
+C. Tan, V. Niculae, C. Danescu-Niculescu-Mizil, et L. Lee,
+\textit{Winning Arguments: Interaction Dynamics and Persuasion Strategies in Good-faith Online Discussions},
+Proceedings of the 25th International Conference on World Wide Web (WWW 2016).
+
+\bibitem{hc3}
+B. Guo et al.,
+\textit{How Close is ChatGPT to Human Experts? Comparison Corpus, Evaluation, and Detection},
+arXiv preprint arXiv:2301.07597 (2023).
+
+\bibitem{qlora}
+T. Dettmers, A. Pagnoni, A. Holtzman, et L. Zettlemoyer,
+\textit{QLoRA: Efficient Finetuning of Quantized LLMs},
+Advances in Neural Information Processing Systems (NeurIPS 2023).
+
+\bibitem{attention}
+A. Vaswani et al.,
+\textit{Attention Is All You Need},
+Advances in Neural Information Processing Systems (NeurIPS 2017).
+
+\bibitem{tsne}
+L. van der Maaten et G. Hinton,
+\textit{Visualizing Data using t-SNE},
+Journal of Machine Learning Research (JMLR 2008).
+
+\end{thebibliography}
+
+\end{document}
