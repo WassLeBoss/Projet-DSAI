@@ -13,6 +13,7 @@ Utilisation :
 """
 
 import logging
+import os
 
 import hydra
 import pandas as pd
@@ -31,7 +32,18 @@ def main(cfg: DictConfig) -> None:
 
     # ── Chargement du WAC ────────────────────────────────────────────────────
     log.info("Chargement du WAC...")
-    df = pd.read_csv(cfg.wac_csv_path)
+    csv_path = cfg.wac_csv_path
+    if not os.path.exists(csv_path):
+        if csv_path.endswith("WAC.csv"):
+            alt_path = csv_path.replace("WAC.csv", "WAC_final.csv")
+            if os.path.exists(alt_path):
+                csv_path = alt_path
+        elif csv_path.endswith("WAC_final.csv"):
+            alt_path = csv_path.replace("WAC_final.csv", "WAC.csv")
+            if os.path.exists(alt_path):
+                csv_path = alt_path
+
+    df = pd.read_csv(csv_path)
 
     # Garde uniquement les arguments gagnants (success=1)
     winners = df[df["success"] == 1].copy()
