@@ -15,7 +15,7 @@ repetition_penalty: 1.1
 # Parametres specifiques au Finetuning (QLoRA)
 max_input_length: 512
 num_train_epochs: 1
-per_device_train_batch_size: 2
+batch_size: 2
 gradient_accumulation_steps: 4
 learning_rate: 2e-4
 logging_steps: 10
