@@ -1,11 +1,4 @@
-"""
-Word2Vec Encoder — embeddings de phrases par moyenne de vecteurs de mots.
-
-Usage:
-    from src.encoders.w2v_encoder import W2VEncoder
-    enc = TfidfEncoder(cfg.encoder)
-    X_train, X_test = enc.fit_transform(texts_train, texts_test)
-"""
+"""Word2Vec Encoder — embeddings de phrases par moyenne de vecteurs de mots."""
 
 import numpy as np
 from gensim.models import Word2Vec
@@ -15,18 +8,7 @@ from src.data.preprocessing import tokenize_lemmatize
 
 
 class W2VEncoder:
-    """
-    Encode des textes via Word2Vec (entraîné sur les données d'entraînement).
-
-    Chaque texte est représenté par la moyenne de ses vecteurs de mots.
-
-    Paramètres (depuis cfg.encoder) :
-        vector_size       : dimension des embeddings (default: 100)
-        window            : fenêtre de contexte (default: 5)
-        min_count         : fréquence minimale d'un mot (default: 1)
-        workers           : threads parallèles (default: 4)
-        use_lemmatization : appliquer lemmatisation avant encodage
-    """
+    """Encode des textes via Word2Vec (entraîné sur les données d'entraînement)."""
 
     def __init__(self, cfg: DictConfig) -> None:
         self.cfg = cfg
@@ -45,12 +27,7 @@ class W2VEncoder:
     def fit_transform(
         self, texts_train: list[str], texts_test: list[str]
     ) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Entraîne Word2Vec sur le train, encode train + test.
-
-        Retourne :
-            X_train, X_test : arrays (n_samples, vector_size)
-        """
+        """Entraîne Word2Vec sur le train, encode train + test."""
         train_sentences = self._tokenize(texts_train)
         test_sentences = self._tokenize(texts_test)
 

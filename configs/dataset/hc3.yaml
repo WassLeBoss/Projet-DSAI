@@ -1,14 +1,10 @@
-# ── HC3 — Human ChatGPT Comparison Corpus ───────────
+# HC3 — Human ChatGPT Comparison Corpus
 name: hc3
 # Subset : reddit_eli5 (questions Reddit + reponses humaines vs ChatGPT)
 # 17 112 lignes — colonnes reelles : question, human_answers, chatgpt_answers, index
 csv_path: datasets/HC3/train.csv
 
 # Colonnes reelles du CSV
-# Le loader load_hc3() aplatit human_answers et chatgpt_answers
-# en paires (texte, label) — les colonnes ci-dessous sont documentaires.
-# human_answers  : list[str] — reponses humaines   → label 0
-# chatgpt_answers: list[str] — reponses ChatGPT    → label 1
 
 # Split
 test_size: 0.2

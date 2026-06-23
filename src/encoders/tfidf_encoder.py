@@ -1,11 +1,4 @@
-"""
-TF-IDF Encoder — représentation sac-de-mots pondérée.
-
-Usage:
-    from src.encoders.tfidf_encoder import TfidfEncoder
-    enc = TfidfEncoder(cfg.encoder)
-    X_train, X_test = enc.fit_transform(texts_train, texts_test)
-"""
+"""TF-IDF Encoder — représentation sac-de-mots pondérée."""
 
 import numpy as np
 from omegaconf import DictConfig
@@ -15,14 +8,7 @@ from src.data.preprocessing import clean_text
 
 
 class TfidfEncoder:
-    """
-    Encode des textes via TF-IDF.
-
-    Paramètres (depuis cfg.encoder) :
-        max_features      : nombre max de features (default: 10 000)
-        ngram_range       : plage de n-grammes (default: [1, 2])
-        use_lemmatization : appliquer lemmatisation avant vectorisation
-    """
+    """Encode des textes via TF-IDF."""
 
     def __init__(self, cfg: DictConfig) -> None:
         self.cfg = cfg
@@ -38,12 +24,7 @@ class TfidfEncoder:
         return texts
 
     def fit_transform(self, texts_train: list[str], texts_test: list[str]):
-        """
-        Fit sur le train, transform train + test.
-
-        Retourne :
-            X_train, X_test : matrices scipy.sparse (n_samples, n_features)
-        """
+        """Fit sur le train, transform train + test."""
         train_clean = self._preprocess(texts_train)
         test_clean = self._preprocess(texts_test)
 

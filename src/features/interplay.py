@@ -1,13 +1,4 @@
-"""
-Features d'interplay entre une réponse et le post original (OP).
-
-Calcule le chevauchement lexical (tous mots, stopwords, mots pleins)
-entre le texte de réponse et le texte OP.
-
-Usage:
-    from src.features.interplay import interplay_features
-    feats = interplay_features(reply_text, op_text)
-"""
+"""Features d'interplay entre une réponse et le post original (OP)."""
 
 from src.features.utils import STOPWORDS, content_words, tokenize
 
@@ -15,17 +6,7 @@ from src.features.utils import STOPWORDS, content_words, tokenize
 def overlap_features(
     reply_tokens: list[str], op_tokens: list[str], suffix: str
 ) -> dict[str, float]:
-    """
-    Calcule les métriques de chevauchement entre deux listes de tokens.
-
-    Args:
-        reply_tokens : tokens de la réponse
-        op_tokens    : tokens du post original
-        suffix       : suffixe pour nommer les features (ex: 'all', 'stop', 'content')
-
-    Retourne :
-        Dictionnaire de 4 métriques préfixées par suffix
-    """
+    """Calcule les métriques de chevauchement entre deux listes de tokens."""
     A = set(reply_tokens)
     O = set(op_tokens)
     inter = A & O
@@ -45,17 +26,7 @@ def overlap_features(
 
 
 def interplay_features(reply_text: str, op_text: str) -> dict[str, float]:
-    """
-    Calcule toutes les features d'interplay entre une réponse et l'OP.
-
-    Couvre trois niveaux :
-      - 'all'     : tous les tokens
-      - 'stop'    : uniquement les stopwords
-      - 'content' : uniquement les mots pleins (sans stopwords)
-
-    Retourne :
-        Dictionnaire de 12 features (4 métriques × 3 niveaux)
-    """
+    """Calcule toutes les features d'interplay entre une réponse et l'OP."""
     reply_tok = tokenize(reply_text)
     op_tok = tokenize(op_text)
 

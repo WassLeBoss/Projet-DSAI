@@ -1,17 +1,4 @@
-"""
-Prompt Engineering base sur les features Axe 1.
-
-Principe :
-    1. Analyser les features les plus discriminantes du SVM Axe 1 (coef_)
-    2. Traduire chaque feature en instruction naturelle pour le LLM
-    3. Construire un system prompt qui guide le LLM vers un argument convaincant
-
-Usage:
-    from src.generation.prompt_engineering import PromptEngineer
-    pe = PromptEngineer(axe1_clf, cfg)
-    prompt = pe.build_prompt(op_text)
-    candidates = generator.generate_n(prompt, n=5)
-"""
+"""Prompt Engineering base sur les features Axe 1."""
 
 import logging
 
@@ -52,15 +39,7 @@ FEATURE_TO_INSTRUCTION: dict[str, str] = {
 
 
 class PromptEngineer:
-    """
-    Construit des system prompts a partir des features les plus
-    discriminantes du SVM Axe 1.
-
-    Args:
-        axe1_clf      : SVM Axe 1 (sklearn SVC avec kernel lineaire)
-        feature_names : liste ordonnee des noms de features
-        cfg           : config strategy.prompt_eng
-    """
+    """Construit des system prompts a partir des features les plus"""
 
     def __init__(self, axe1_clf, feature_names: list[str], cfg: DictConfig) -> None:
         if isinstance(axe1_clf, dict) and axe1_clf.get("type") == "roberta_finetuned":
@@ -72,12 +51,7 @@ class PromptEngineer:
         self._top_features = self._extract_top_features()
 
     def _extract_top_features(self) -> list[str]:
-        """
-        Extrait les features les plus positivement correlees au succes.
-
-        Pour SVM lineaire : utilise clf.coef_ (coefficients du separateur).
-        Retourne les top_k features avec coefficient positif le plus eleve.
-        """
+        """Extrait les features les plus positivement correlees au succes."""
         if not hasattr(self.clf, "coef_"):
             log.warning(
                 "Le SVM n'a pas de coef_ (kernel non lineaire). "
@@ -97,12 +71,7 @@ class PromptEngineer:
         return top_features
 
     def build_system_prompt(self) -> str:
-        """
-        Construit le system prompt avec les instructions derivees de l'Axe 1.
-
-        Retourne :
-            System prompt en anglais
-        """
+        """Construit le system prompt avec les instructions derivees de l'Axe 1."""
         instructions = [
             FEATURE_TO_INSTRUCTION[f]
             for f in self._top_features
@@ -120,15 +89,7 @@ class PromptEngineer:
         return prompt
 
     def build_prompt(self, op_text: str) -> str:
-        """
-        Construit le prompt complet (system + OP).
-
-        Args:
-            op_text : texte du post original
-
-        Retourne :
-            Prompt complet pret pour le LLM
-        """
+        """Construit le prompt complet (system + OP)."""
         system = self.build_system_prompt()
         return f"{system}\n[POST]: {op_text}\n\n[YOUR REPLY]: "
 

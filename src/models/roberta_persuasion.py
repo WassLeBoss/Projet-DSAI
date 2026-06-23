@@ -6,10 +6,7 @@ from transformers import RobertaForMultipleChoice, RobertaTokenizer
 
 
 class RobertaPersuasionClassifier:
-    """
-    Classe wrapper pour utiliser facilement le modèle RoBERTa fine-tuné
-    afin de classifier un argument individuel par rapport à un OP.
-    """
+    """Classe wrapper pour utiliser facilement le modèle RoBERTa fine-tuné"""
 
     def __init__(self, model_dir_or_file: str):
         # Résolution du chemin des poids et des métadonnées (seuil)
@@ -49,9 +46,7 @@ class RobertaPersuasionClassifier:
                 self.threshold = metadata.get("optimal_threshold", 0.0)
 
     def get_persuasion_score(self, op: str, arg: str) -> float:
-        """
-        Calcule le score brut (logit) de persuasivité de l'argument pour l'OP donné.
-        """
+        """Calcule le score brut (logit) de persuasivité de l'argument pour l'OP donné."""
         inputs = self.tokenizer(
             op,
             arg,
@@ -73,15 +68,11 @@ class RobertaPersuasionClassifier:
         return score
 
     def predict_probability(self, op: str, arg: str) -> float:
-        """
-        Retourne la probabilité (via sigmoïde) que l'argument soit persuasif.
-        """
+        """Retourne la probabilité (via sigmoïde) que l'argument soit persuasif."""
         score = self.get_persuasion_score(op, arg)
         return torch.sigmoid(torch.tensor(score)).item()
 
     def predict(self, op: str, arg: str) -> bool:
-        """
-        Prédit si l'argument est persuasif ou non en utilisant le seuil optimal (True/False).
-        """
+        """Prédit si l'argument est persuasif ou non en utilisant le seuil optimal (True/False)."""
         score = self.get_persuasion_score(op, arg)
         return score > self.threshold

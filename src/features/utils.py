@@ -1,13 +1,8 @@
-"""
-Lexiques, stopwords et fonctions utilitaires bas-niveau pour les features.
-
-Usage:
-    from src.features.utils import tokenize, content_words, count_syllables, HEDGES
-"""
+"""Lexiques, stopwords et fonctions utilitaires bas-niveau pour les features."""
 
 import re
 
-# ── Stopwords ────────────────────────────────────────────────────────────────
+# Stopwords
 STOPWORDS = {
     "a",
     "an",
@@ -117,7 +112,7 @@ STOPWORDS = {
     "much",
 }
 
-# ── Lexiques catégoriels ─────────────────────────────────────────────────────
+# Lexiques catégoriels
 HEDGES = {
     "might",
     "maybe",
@@ -191,13 +186,11 @@ FIRST_PERSON_PLUR = {"we", "us", "our", "ourselves", "ours"}
 SECOND_PERSON = {"you", "your", "yourself", "yours", "yourselves"}
 NUMBERED_WORDS = {"first", "second", "third", "fourth", "fifth", "firstly", "secondly"}
 
-# ── Lexique psycholinguistique VAD-C ────────────────────────────────────────
-# Format attendu : "mot": {"valence": 0.8, "arousal": 0.3, "dominance": 0.6, "concreteness": 0.9}
-# À enrichir avec les données Brysbaert & Warriner
+# Lexique psycholinguistique VAD-C
 VAD_C_LEXICON: dict[str, dict[str, float]] = {}
 
 
-# ── Fonctions utilitaires ────────────────────────────────────────────────────
+# Fonctions utilitaires
 
 
 def tokenize(text: str) -> list[str]:

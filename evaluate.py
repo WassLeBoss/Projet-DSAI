@@ -1,21 +1,4 @@
-"""
-Point d'entrée — Visualisation PCA des représentations.
-
-Produit un graphique PCA coloré par classe et le sauvegarde dans outputs/.
-
-Utilisation :
-    # Défaut : features sur WAC
-    python evaluate.py
-
-    # Visualiser les embeddings RoBERTa
-    python evaluate.py encoder=roberta
-
-    # Visualiser TF-IDF sur WAC
-    python evaluate.py encoder=tfidf dataset=wac
-
-    # Afficher la config sans lancer la visualisation
-    python evaluate.py --cfg job
-"""
+"""Point d'entrée — Visualisation PCA des représentations."""
 
 import logging
 
@@ -55,7 +38,7 @@ def main(cfg: DictConfig) -> None:
         cfg.dataset.name,
     )
 
-    # ── Chargement & encodage ────────────────────────────────────────────────
+    # Chargement & encodage
     if cfg.encoder.name == "features":
         from src.data.loader import load_wac_pairs
         from src.encoders.features_encoder import FeaturesEncoder
@@ -110,7 +93,7 @@ def main(cfg: DictConfig) -> None:
             X = np.concatenate([X_train, X_test])
         y = np.concatenate([y_train, y_test])
 
-    # ── Réduction UMAP 2D ───────────────────────────────────────────────────
+    # Réduction UMAP 2D
     import umap
 
     # Sous-échantillonnage pour UMAP (plus rapide que t-SNE, mais utile pour clarté)
@@ -143,7 +126,7 @@ def main(cfg: DictConfig) -> None:
     coords = reducer.fit_transform(X_reduced)
     title = f"UMAP  —  {cfg.encoder.name.upper()}  |  {cfg.dataset.name.upper()}"
 
-    # ── Tracé ────────────────────────────────────────────────────────────────
+    # Tracé
     palette = {1: ("steelblue", "Positif / Succès"), 0: ("tomato", "Négatif / Échec")}
     plt.figure(figsize=(9, 6))
     for label, (color, name) in palette.items():

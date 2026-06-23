@@ -1,12 +1,4 @@
-"""Permutation importance for handcrafted argument features.
-
-This script compares two feature families:
-- features: style features + interplay features, with op_text included
-- pairwise_features: pairwise differences built from winner/loser pairs
-
-It trains a simple baseline model, evaluates it on a held-out test set,
-then computes permutation importance on that same test set.
-"""
+"""Permutation importance for handcrafted argument features."""
 
 from __future__ import annotations
 

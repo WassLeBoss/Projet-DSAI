@@ -1,17 +1,4 @@
-"""
-Construction du dataset pairwise pour l'approche features stylistiques.
-
-Principe :
-    Pour chaque paire (winner, loser), on calcule aléatoirement :
-        X = features(winner) - features(loser)  → y = 1
-        ou
-        X = features(loser)  - features(winner) → y = 0
-
-    Cette symétrie double le dataset et évite tout biais d'ordre.
-
-Usage:
-    from src.features.pairwise import build_feature_vector, build_pairwise_dataset, get_feature_names
-"""
+"""Construction du dataset pairwise pour l'approche features stylistiques."""
 
 import numpy as np
 import pandas as pd
@@ -21,11 +8,7 @@ from src.features.style import style_features
 
 
 def build_feature_vector(text: str, op_text: str) -> dict[str, float]:
-    """
-    Construit le vecteur de features complet pour un texte + son OP.
-
-    Combine features stylistiques + features d'interplay.
-    """
+    """Construit le vecteur de features complet pour un texte + son OP."""
     feats = {}
     feats.update(style_features(text))
     feats.update(interplay_features(text, op_text))
@@ -33,10 +16,7 @@ def build_feature_vector(text: str, op_text: str) -> dict[str, float]:
 
 
 def get_feature_names() -> list[str]:
-    """
-    Retourne la liste triée des noms de features.
-    Utile pour reconstruire les noms après conversion en np.ndarray.
-    """
+    """Retourne la liste triée des noms de features."""
     return sorted(build_feature_vector("dummy text", "dummy op").keys())
 
 
@@ -44,17 +24,7 @@ def build_pairwise_dataset(
     pairs_df: pd.DataFrame,
     random_state: int = 42,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Construit le dataset pairwise (X, y) à partir des paires (winner, loser).
-
-    Args:
-        pairs_df     : DataFrame avec colonnes winner_text, loser_text, op_text
-        random_state : graine aléatoire pour la symétrie
-
-    Retourne :
-        X : array (n_pairs, n_features) — différences de features
-        y : array (n_pairs,) — labels 0 ou 1
-    """
+    """Construit le dataset pairwise (X, y) à partir des paires (winner, loser)."""
     rng = np.random.default_rng(random_state)
     keys = get_feature_names()
     X_rows, y_rows = [], []

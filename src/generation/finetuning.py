@@ -1,18 +1,4 @@
-"""
-Fine-tuning d'un LLM sur les arguments gagnants du WAC.
-
-Le modele apprend a continuer un debat de maniere convaincante.
-Format d'entree :
-    "[OP]: {op_text}\\n[REPLY]: {winning_argument}"
-
-La loss est calculee uniquement sur la partie [REPLY] (next-token prediction).
-
-Usage:
-    from src.generation.finetuning import WACFinetuner
-    finetuner = WACFinetuner(cfg)
-    finetuner.train(train_pairs)
-    finetuner.save("outputs/finetuned_gpt2/")
-"""
+"""Fine-tuning d'un LLM sur les arguments gagnants du WAC."""
 
 import logging
 from pathlib import Path
@@ -37,13 +23,7 @@ REPLY_TOKEN = "[REPLY]:"
 
 
 class WACDebateDataset(Dataset):
-    """
-    Dataset PyTorch pour le fine-tuning sur le WAC.
-
-    Chaque exemple = un argument gagnant (success=1) avec son OP.
-    Format : "[OP]: {op_text}\\n[REPLY]: {winning_text}<eos>"
-    La loss est masquee sur la partie [OP] — on predit uniquement la reponse.
-    """
+    """Dataset PyTorch pour le fine-tuning sur le WAC."""
 
     def __init__(
         self,
@@ -97,13 +77,7 @@ class WACDebateDataset(Dataset):
 
 
 class WACFinetuner:
-    """
-    Fine-tune un LLM causal (GPT-2 ou Mistral+LoRA) sur les arguments
-    gagnants du WinningArgCorpus.
-
-    Args:
-        cfg : config Hydra (cfg.llm)
-    """
+    """Fine-tune un LLM causal (GPT-2 ou Mistral+LoRA) sur les arguments"""
 
     def __init__(self, cfg: DictConfig) -> None:
         self.cfg = cfg
@@ -148,13 +122,7 @@ class WACFinetuner:
     def train(
         self, train_pairs: pd.DataFrame, output_dir: str = "outputs/finetuned"
     ) -> None:
-        """
-        Lance le fine-tuning.
-
-        Args:
-            train_pairs : DataFrame avec colonnes winner_text, op_text
-            output_dir  : dossier de sauvegarde du modele
-        """
+        """Lance le fine-tuning."""
         log.info(
             "Construction du dataset de fine-tuning (%d paires)...", len(train_pairs)
         )

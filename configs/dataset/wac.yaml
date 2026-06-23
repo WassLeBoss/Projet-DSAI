@@ -1,4 +1,4 @@
-# ── WinningArgCorpus (Reddit CMV) ───────────────────
+# WinningArgCorpus (Reddit CMV)
 name: wac
 csv_path: datasets/WinningArgCorpus/WAC.csv
 

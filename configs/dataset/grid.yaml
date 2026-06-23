@@ -1,4 +1,4 @@
-# ── GriD — Détection de textes synthétiques ─────────
+# GriD — Détection de textes synthétiques
 name: grid
 csv_path: datasets/GriD/reddit_filtered_dataset.csv
 

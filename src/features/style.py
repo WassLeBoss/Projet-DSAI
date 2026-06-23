@@ -1,10 +1,4 @@
-"""
-Features stylistiques extraites d'un texte argumentatif.
-
-Usage:
-    from src.features.style import style_features
-    feats = style_features("Some text here.")
-"""
+"""Features stylistiques extraites d'un texte argumentatif."""
 
 import re
 from collections import Counter
@@ -27,20 +21,7 @@ from src.features.utils import (
 
 
 def style_features(text: str) -> dict[str, float]:
-    """
-    Calcule un vecteur de features stylistiques pour un texte.
-
-    Couvre :
-      - Longueur (mots, phrases, paragraphes)
-      - Catégories lexicales (hedges, polarité, pronoms, liens…)
-      - Richesse lexicale (type-token ratio, entropie)
-      - Lisibilité (Flesch-Kincaid Grade Level)
-      - Markdown (gras, italique, listes)
-      - Scores psycholinguistiques VAD-C
-
-    Retourne :
-        Dictionnaire feature_name → valeur float
-    """
+    """Calcule un vecteur de features stylistiques pour un texte."""
     tokens = tokenize(text)
     n = len(tokens) or 1
     sents = [s.strip() for s in re.split(r"[.!?]+", text) if s.strip()]
@@ -49,7 +30,7 @@ def style_features(text: str) -> dict[str, float]:
 
     unique = len(set(tokens))
 
-    # ── Comptages absolus ───────────────────────────────────────────────────
+    # Comptages absolus
     n_hedges = sum(1 for t in tokens if t in HEDGES)
     n_pos = sum(1 for t in tokens if t in POSITIVE_WORDS)
     n_neg = sum(1 for t in tokens if t in NEGATIVE_WORDS)
@@ -60,7 +41,7 @@ def style_features(text: str) -> dict[str, float]:
     n_indefinite = sum(1 for t in tokens if t in {"a", "an"})
     n_num_words = sum(1 for t in tokens if t in NUMBERED_WORDS)
 
-    # ── Liens et références ─────────────────────────────────────────────────
+    # Liens et références
     n_links = len(re.findall(r"https?://\S+", text))
     n_com_links = len(re.findall(r"https?://\S*\.com\S*", text))
     n_edu_links = len(re.findall(r"https?://\S*\.edu\S*", text))
@@ -71,22 +52,22 @@ def style_features(text: str) -> dict[str, float]:
     n_questions = text.count("?")
     n_quotes = len(re.findall(r"^>", text, re.MULTILINE))
 
-    # ── Richesse lexicale ───────────────────────────────────────────────────
+    # Richesse lexicale
     type_token = unique / n
     freq = Counter(tokens)
     total = sum(freq.values())
     entropy = -sum((c / total) * np.log2(c / total) for c in freq.values() if c > 0)
 
-    # ── Flesch-Kincaid Grade Level ──────────────────────────────────────────
+    # Flesch-Kincaid Grade Level
     total_syllables = sum(count_syllables(t) for t in tokens)
     flesch_kincaid = 0.39 * (n / n_sents) + 11.8 * (total_syllables / n) - 15.59
 
-    # ── Markdown ────────────────────────────────────────────────────────────
+    # Markdown
     n_bold = len(re.findall(r"\*\*.*?\*\*", text))
     n_italic = len(re.findall(r"\*[^*]+\*|_[^_]+_", text))
     n_bullet = len(re.findall(r"^\s*[-*]\s", text, re.MULTILINE))
 
-    # ── Scores psycholinguistiques VAD-C ────────────────────────────────────
+    # Scores psycholinguistiques VAD-C
     c_words = content_words(tokens)
     vad_scores = {"valence": [], "arousal": [], "dominance": [], "concreteness": []}
     for w in c_words:

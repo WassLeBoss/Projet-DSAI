@@ -1,9 +1,4 @@
-"""
-Text preprocessing utilities shared across encoders.
-
-Usage:
-    from src.data.preprocessing import clean_text, tokenize_lemmatize
-"""
+"""Text preprocessing utilities shared across encoders."""
 
 import re
 
@@ -19,16 +14,7 @@ def download_nltk_resources() -> None:
 
 
 def clean_text(text: str, lemmatize: bool = True) -> str:
-    """
-    Nettoie un texte brut : minuscules, suppression stopwords, lemmatisation optionnelle.
-
-    Args:
-        text      : texte brut
-        lemmatize : si True, applique la lemmatisation WordNet
-
-    Retourne :
-        Texte nettoyé sous forme de string (tokens réunis par espace)
-    """
+    """Nettoie un texte brut : minuscules, suppression stopwords, lemmatisation optionnelle."""
     download_nltk_resources()
     lemmatizer = WordNetLemmatizer()
     stop_words = set(stopwords.words("english"))
@@ -44,10 +30,7 @@ def clean_text(text: str, lemmatize: bool = True) -> str:
 
 
 def tokenize_lemmatize(text: str) -> list[str]:
-    """
-    Tokenise et lemmatise un texte. Retourne une liste de tokens.
-    Utilisé principalement par l'encodeur Word2Vec.
-    """
+    """Tokenise et lemmatise un texte. Retourne une liste de tokens."""
     download_nltk_resources()
     lemmatizer = WordNetLemmatizer()
     stop_words = set(stopwords.words("english"))

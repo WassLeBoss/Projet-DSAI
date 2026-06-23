@@ -5,9 +5,7 @@ defaults:
 
 seed: 42
 
-# ── Chemins vers les modeles Axes 1 & 2 ────────────────
-# A renseigner apres avoir lance train.py sur chaque axe.
-# Ces fichiers sont generes automatiquement dans outputs/ par train.py.
+# Chemins vers les modeles Axes 1 & 2
 axe1:
   model_path: ???          # ex: outputs/2026-06-16/features_wac/axe1_svm_features_wac.pkl
   encoder_name: features   # encodeur utilise pour Axe 1 (tfidf|w2v|roberta|features)
@@ -16,11 +14,11 @@ axe2:
   model_path: ???          # ex: outputs/2026-06-16/roberta_hc3/axe1_svm_roberta_hc3.pkl
   encoder_name: roberta    # encodeur utilise pour Axe 2
 
-# ── Dataset source pour les prompts ─────────────────────
+# Dataset source pour les prompts
 wac_csv_path: datasets/WinningArgCorpus/WAC.csv
 n_op_samples: 50           # nombre d'OP a utiliser pour la generation
 
-# ── Hydra outputs ────────────────────────────────────────
+# Hydra outputs
 hydra:
   run:
     dir: outputs/generation/${now:%Y-%m-%d}/${now:%H-%M-%S}_${llm.name}_${strategy.name}

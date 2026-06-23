@@ -1,28 +1,4 @@
-"""
-Point d'entrée principal — Entraînement et évaluation.
-
-Utilisation :
-    # Défaut : features stylistiques sur WAC
-    python train.py
-
-    # Changer l'encodeur
-    python train.py encoder=roberta
-    python train.py encoder=tfidf
-    python train.py encoder=w2v
-
-    # Changer le dataset (GriD pour détection synthétique)
-    python train.py dataset=grid encoder=roberta
-
-    # Multi-run (sweep sur tous les encodeurs)
-    python train.py -m encoder=tfidf,w2v,roberta,features
-
-    # Inclure ou non le texte du post original (op_text) pour TF-IDF/RoBERTa/Word2Vec
-    python train.py include_op=true
-    python train.py include_op=false
-
-    # Afficher la config sans lancer l'entraînement
-    python train.py --cfg job
-"""
+"""Point d'entrée principal — Entraînement et évaluation."""
 
 import logging
 
@@ -34,10 +10,7 @@ log = logging.getLogger(__name__)
 
 
 def _build_encoder(cfg: DictConfig):
-    """
-    Fabrique l'encodeur correspondant au nom dans cfg.encoder.name.
-    On passe l'objet cfg complet au constructeur — pas de deballage kwargs.
-    """
+    """Fabrique l'encodeur correspondant au nom dans cfg.encoder.name."""
     name = cfg.encoder.name
     if name == "tfidf":
         from src.encoders.tfidf_encoder import TfidfEncoder
@@ -63,7 +36,7 @@ def main(cfg: DictConfig) -> None:
     log.info("Model    : %s", cfg.model.name)
     log.info("─" * 60)
 
-    # ── Chargement des données ───────────────────────────────────────────────
+    # Chargement des données
     if cfg.encoder.name == "features":
         # Mode pairwise (WAC uniquement)
         from src.data.loader import load_wac_pairs
@@ -115,7 +88,7 @@ def main(cfg: DictConfig) -> None:
         "Train : %d exemples | Test : %d exemples", X_train.shape[0], X_test.shape[0]
     )
 
-    # ── Entraînement & Évaluation ────────────────────────────────────────────
+    # Entraînement & Évaluation
     from src.models.svm_classifier import SVMClassifier
 
     classifier = SVMClassifier(cfg.model)
@@ -123,7 +96,7 @@ def main(cfg: DictConfig) -> None:
 
     log.info("AUC final : %.4f", metrics.auc)
 
-    # ── Sauvegarde du modele (pour reutilisation dans Axe 3) ─────────────────
+    # Sauvegarde du modele (pour reutilisation dans Axe 3)
     model_path = f"axe1_svm_{cfg.encoder.name}_{cfg.dataset.name}.pkl"
     classifier.save(model_path)
     log.info("Modele sauvegarde -> %s (utilisable par Axe 3)", model_path)

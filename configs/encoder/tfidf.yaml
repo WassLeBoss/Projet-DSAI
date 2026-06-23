@@ -1,4 +1,4 @@
-# ── TF-IDF Encoder ──────────────────────────────────
+# TF-IDF Encoder
 name: tfidf
 _target_: src.encoders.tfidf_encoder.TfidfEncoder
 

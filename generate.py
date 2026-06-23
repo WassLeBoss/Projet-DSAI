@@ -1,26 +1,4 @@
-"""
-Point d'entree — Generation d'arguments convaincants (Axe 3).
-
-Necessite :
-    - Le SVM Axe 1 entraine et sauvegarde (via train.py)
-    - Le LLM fine-tune (via finetune.py) OU GPT-2 pre-entraine pour les tests
-
-Utilisation :
-
-    # Strategie 1 : Best-of-N avec LLM fine-tune
-    python generate.py strategy=best_of_n \\
-        axe1.model_path=outputs/YYYY-MM-DD/.../axe1_svm_features_wac.pkl
-
-    # Strategie 2 : Prompt engineering (zero-shot)
-    python generate.py strategy=prompt_eng \\
-        axe1.model_path=outputs/YYYY-MM-DD/.../axe1_svm_features_wac.pkl
-
-    # Utiliser un modele fine-tune specifique
-    python generate.py strategy=best_of_n llm.model_id=finetuned_gpt2/
-
-    # Afficher la config sans lancer
-    python generate.py --cfg job
-"""
+"""Point d'entree — Generation d'arguments convaincants (Axe 3)."""
 
 import logging
 import pickle
@@ -81,11 +59,11 @@ def main(cfg: DictConfig) -> None:
     log.info("Strategie: %s", cfg.strategy.name)
     log.info("=" * 60)
 
-    # ── Chargement des modeles Axes 1 & 2 ────────────────────────────────────
+    # Chargement des modeles Axes 1 & 2
     axe1_clf = _load_axe1_model(cfg)
     axe2_clf = _load_axe2_model(cfg)
 
-    # ── Chargement des OPs de test depuis le WAC ─────────────────────────────
+    # Chargement des OPs de test depuis le WAC
     log.info("Chargement des OPs depuis : %s", cfg.wac_csv_path)
     df = pd.read_csv(cfg.wac_csv_path)
 
@@ -104,12 +82,12 @@ def main(cfg: DictConfig) -> None:
     # Vrais winners pour le delta de features dans l'evaluation
     reference_winners = df[df["success"] == 1]["text"].dropna().tolist()[:200]
 
-    # ── Initialisation du generateur ─────────────────────────────────────────
+    # Initialisation du generateur
     from src.generation.generator import ArgumentGenerator
 
     generator = ArgumentGenerator(cfg.llm.model_id, cfg.llm)
 
-    # ── Evaluateur ───────────────────────────────────────────────────────────
+    # Evaluateur
     from src.generation.evaluator import ArgumentEvaluator
 
     evaluator = ArgumentEvaluator(
@@ -119,7 +97,7 @@ def main(cfg: DictConfig) -> None:
         axe2_enc_name=cfg.axe2.encoder_name,
     )
 
-    # ── Test d'evaluation rapide (fail-fast) ─────────────────────────────────
+    # Test d'evaluation rapide (fail-fast)
     log.info("Verification de la compatibilite des modeles (dry-run)...")
     try:
         evaluator.evaluate("Test OP", "Test Generated")
@@ -129,7 +107,7 @@ def main(cfg: DictConfig) -> None:
         log.error("Details: %s", str(e))
         raise RuntimeError("Echec du dry-run d'evaluation.") from e
 
-    # ── Strategie de generation ───────────────────────────────────────────────
+    # Strategie de generation
     results = []
 
     if cfg.strategy.name == "best_of_n":
@@ -184,7 +162,7 @@ def main(cfg: DictConfig) -> None:
     else:
         raise ValueError(f"Strategie inconnue : {cfg.strategy.name}")
 
-    # ── Evaluation des resultats ──────────────────────────────────────────────
+    # Evaluation des resultats
     log.info("\n%s\nEVALUATION DES ARGUMENTS GENERES\n%s", "=" * 60, "=" * 60)
     report_df = evaluator.evaluate_batch(results, reference_winners)
 
@@ -206,20 +184,7 @@ def main(cfg: DictConfig) -> None:
 
     # Sauvegarde version HTML lisible
     html_path = "generation_report.html"
-    html_style = """
-    <style>
-      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f9f9f9;}
-      table { border-collapse: collapse; width: 100%; background-color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-      th, td { border: 1px solid #ddd; padding: 15px; text-align: left; vertical-align: top; }
-      th { background-color: #4CAF50; color: white; position: sticky; top: 0; }
-      tr:nth-child(even) { background-color: #f2f2f2; }
-      tr:hover { background-color: #e8f5e9; }
-      .text-cell { white-space: pre-wrap; font-family: monospace; font-size: 13px; line-height: 1.4; max-width: 600px;}
-      .score-cell { font-weight: bold; font-size: 16px;}
-      .score-good { color: #2e7d32; }
-      .score-bad { color: #c62828; }
-    </style>
-    """
+    html_style = """<style>"""
 
     html_content = f"<!DOCTYPE html>\n<html>\n<head><meta charset='utf-8'>{html_style}</head>\n<body>\n<h2>Rapport de Generation - Axe 3</h2>\n"
     html_content += "<table>\n<tr><th>OP (Message original)</th><th>Reponse de l'IA (LLM)</th><th>Axe 1 (% Convaincant)</th><th>Axe 2 (% Généré par IA)</th></tr>\n"
@@ -235,14 +200,7 @@ def main(cfg: DictConfig) -> None:
         # Axe 2 : < 50% = Humain (Vert, car on veut tromper l'Axe 2), > 50% = IA détectée (Rouge)
         a2_class = "score-good" if p_ai < 50 else "score-bad"
 
-        html_content += f"""
-        <tr>
-            <td class="text-cell">{str(row['op_text']).replace('<', '&lt;')}</td>
-            <td class="text-cell">{str(row['generated_text']).replace('<', '&lt;')}</td>
-            <td class="score-cell {a1_class}">{p_convincing:.1f}%</td>
-            <td class="score-cell {a2_class}">{p_ai:.1f}%</td>
-        </tr>
-        """
+        html_content += f"""<tr>"""
     html_content += "</table>\n</body>\n</html>"
 
     with open(html_path, "w", encoding="utf-8") as f:
@@ -260,7 +218,7 @@ def main(cfg: DictConfig) -> None:
             row["generated_text"],
         )
 
-    # ── Visualisation UMAP (Generated vs M4GT) ────────────────────────────────
+    # Visualisation UMAP (Generated vs M4GT)
     log.info("\n%s\nVISUALISATION UMAP AVEC M4GT\n%s", "=" * 60, "=" * 60)
     try:
         import matplotlib.pyplot as plt

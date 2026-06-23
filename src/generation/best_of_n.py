@@ -1,18 +1,4 @@
-"""
-Best-of-N : genere N arguments et selectionne le plus convaincant
-selon le modele SVM de l'Axe 1.
-
-Principe :
-    Pour un OP donne :
-    1. Generer N arguments candidats via le LLM (ArgumentGenerator)
-    2. Scorer chaque candidat avec le SVM Axe 1 (decision_function)
-    3. Retourner le candidat ayant le score le plus eleve
-
-Usage:
-    from src.generation.best_of_n import BestOfNSelector
-    selector = BestOfNSelector(axe1_clf, axe1_encoder, cfg)
-    best, scores = selector.select(op_text, candidates)
-"""
+"""Best-of-N : genere N arguments et selectionne le plus convaincant"""
 
 import logging
 
@@ -23,14 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class BestOfNSelector:
-    """
-    Selectionne le meilleur argument parmi N candidats via le SVM Axe 1 ou RoBERTa.
-
-    Args:
-        axe1_clf     : SVM Axe 1 charge (sklearn SVC) ou dict de RoBERTa fine-tuned
-        axe1_encoder : encodeur Axe 1 (TfidfEncoder, W2VEncoder, RobertaEncoder ou FeaturesEncoder)
-        cfg          : config strategy.best_of_n
-    """
+    """Selectionne le meilleur argument parmi N candidats via le SVM Axe 1 ou RoBERTa."""
 
     def __init__(self, axe1_clf, axe1_encoder, cfg: DictConfig) -> None:
         if isinstance(axe1_clf, dict) and axe1_clf.get("type") == "roberta_finetuned":
@@ -44,22 +23,7 @@ class BestOfNSelector:
         self.cfg = cfg
 
     def score_candidates(self, op_text: str, candidates: list[str]) -> np.ndarray:
-        """
-        Score chaque candidat selon le SVM Axe 1 ou RoBERTa.
-
-        Pour les encodeurs vectoriels (tfidf/w2v/roberta) :
-            On concatene op_text + candidate pour simuler le format WAC.
-
-        Pour l'encodeur features (pairwise) :
-            On calcule features(candidate, op_text) directement.
-
-        Pour RoBERTa fine-tune :
-            On utilise le tokenizer pour encoder le couple (op_text, candidate)
-            et on obtient le logit brut du modele.
-
-        Retourne :
-            Array de scores (decision_function), shape (n_candidates,)
-        """
+        """Score chaque candidat selon le SVM Axe 1 ou RoBERTa."""
         if self.is_roberta:
             import torch
 
@@ -115,16 +79,7 @@ class BestOfNSelector:
         return scores
 
     def select(self, op_text: str, candidates: list[str]) -> tuple[str, np.ndarray]:
-        """
-        Selectionne le meilleur candidat.
-
-        Args:
-            op_text    : texte du post original
-            candidates : liste de N arguments generes
-
-        Retourne :
-            (best_candidate, all_scores)
-        """
+        """Selectionne le meilleur candidat."""
         scores = self.score_candidates(op_text, candidates)
         best_idx = int(np.argmax(scores))
 

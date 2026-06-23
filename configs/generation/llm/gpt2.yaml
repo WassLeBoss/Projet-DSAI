@@ -1,4 +1,4 @@
-# ── GPT-2 Small — CPU-friendly ──────────────────────────
+# GPT-2 Small — CPU-friendly
 name: gpt2
 model_id: gpt2              # HuggingFace model ID
 use_lora: false             # LoRA non necessaire pour GPT-2 small

@@ -1,4 +1,4 @@
-# ── Dataset M4GT-Bench ──────────────────────────────────
+# Dataset M4GT-Bench
 name: m4gt
 path: datasets/M4GT-Bench/SubtaskA.jsonl
 

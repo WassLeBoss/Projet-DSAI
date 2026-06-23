@@ -1,11 +1,4 @@
-"""
-SVM Classifier — entraînement et évaluation.
-
-Usage:
-    from src.models.svm_classifier import SVMClassifier
-    clf = SVMClassifier(cfg.model)
-    metrics = clf.train_and_evaluate(X_train, X_test, y_train, y_test)
-"""
+"""SVM Classifier — entraînement et évaluation."""
 
 import logging
 import pickle
@@ -29,13 +22,7 @@ class EvalMetrics:
 
 
 class SVMClassifier:
-    """
-    Classifieur SVM configurable via Hydra.
-
-    Paramètres (depuis cfg.model) :
-        kernel       : noyau SVM ('linear', 'rbf', …)
-        class_weight : pondération des classes ('balanced' ou None)
-    """
+    """Classifieur SVM configurable via Hydra."""
 
     def __init__(self, cfg: DictConfig) -> None:
         self.cfg = cfg
@@ -58,12 +45,7 @@ class SVMClassifier:
         y_train: np.ndarray,
         y_test: np.ndarray,
     ) -> EvalMetrics:
-        """
-        Entraîne le SVM et évalue sur le test set.
-
-        Retourne :
-            EvalMetrics avec AUC et rapport de classification complet
-        """
+        """Entraîne le SVM et évalue sur le test set."""
         log.info(
             "Entraînement du SVM (kernel=%s, class_weight=%s)…",
             self.cfg.kernel,

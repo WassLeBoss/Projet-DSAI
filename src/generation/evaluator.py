@@ -1,16 +1,4 @@
-"""
-Evaluateur d'arguments generes — utilise les modeles Axes 1 et 2.
-
-Trois dimensions d'evaluation :
-    1. Convaincance  (Axe 1 SVM) → P(success=1), score de decision SVM
-    2. Authenticite  (Axe 2 SVM) → P(humain=1), le texte ressemble-t-il a un humain?
-    3. Profil features           → comparaison avec les vrais winners WAC
-
-Usage:
-    from src.generation.evaluator import ArgumentEvaluator
-    evaluator = ArgumentEvaluator(axe1_clf, axe2_clf, feature_names)
-    report = evaluator.evaluate(op_text, generated_text, reference_winners)
-"""
+"""Evaluateur d'arguments generes — utilise les modeles Axes 1 et 2."""
 
 import logging
 from dataclasses import dataclass, field
@@ -36,17 +24,7 @@ class EvaluationReport:
 
 
 class ArgumentEvaluator:
-    """
-    Evalue la qualite des arguments generes sur 3 dimensions.
-
-    Args:
-        axe1_clf      : SVM Axe 1 charge (sklearn SVC)
-        axe2_clf      : SVM Axe 2 charge (sklearn SVC)
-        axe1_encoder  : encodeur Axe 1 (pour les modes non-features)
-        axe2_encoder  : encodeur Axe 2
-        axe1_enc_name : nom de l'encodeur Axe 1 ('features'|'tfidf'|'w2v'|'roberta')
-        axe2_enc_name : nom de l'encodeur Axe 2
-    """
+    """Evalue la qualite des arguments generes sur 3 dimensions."""
 
     def __init__(
         self,
@@ -113,18 +91,7 @@ class ArgumentEvaluator:
         generated_text: str,
         reference_winners: list[str] | None = None,
     ) -> EvaluationReport:
-        """
-        Evalue un argument genere.
-
-        Args:
-            op_text           : texte du post original
-            generated_text    : argument genere a evaluer
-            reference_winners : liste de vrais arguments gagnants WAC
-                                (pour calculer l'ecart de features)
-
-        Retourne :
-            EvaluationReport avec les 3 scores
-        """
+        """Evalue un argument genere."""
         # 1. Score Axe 1 (convaincance)
         if self.is_axe1_roberta:
             import torch
@@ -183,12 +150,7 @@ class ArgumentEvaluator:
         results: list[tuple[str, str]],
         reference_winners: list[str] | None = None,
     ) -> pd.DataFrame:
-        """
-        Evalue un batch de paires (op_text, generated_text).
-
-        Retourne :
-            DataFrame avec une ligne par argument genere
-        """
+        """Evalue un batch de paires (op_text, generated_text)."""
         rows = []
         for op_text, gen_text in results:
             r = self.evaluate(op_text, gen_text, reference_winners)

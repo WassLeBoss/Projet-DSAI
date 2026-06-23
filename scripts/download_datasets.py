@@ -1,17 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Scripts de telechargement des datasets.
-
-Usage :
-    # Telecharger HC3 (reddit_eli5)
-    python scripts/download_datasets.py --dataset hc3
-
-    # Telecharger le WinningArgCorpus via ConvoKit
-    python scripts/download_datasets.py --dataset wac
-
-    # Telecharger tous les datasets
-    python scripts/download_datasets.py --all
-"""
+"""Scripts de telechargement des datasets."""
 
 import argparse
 import os
@@ -23,12 +11,7 @@ if sys.platform == "win32":
 
 
 def download_hc3(save_dir: str = "datasets/HC3") -> None:
-    """
-    Telecharge le dataset HC3 (reddit_eli5) depuis HuggingFace
-    et le sauvegarde localement en CSV.
-
-    Compatible avec datasets >= 5.0 (utilise huggingface_hub directement).
-    """
+    """Telecharge le dataset HC3 (reddit_eli5) depuis HuggingFace"""
     import glob
 
     import pandas as pd
@@ -82,15 +65,7 @@ def download_hc3(save_dir: str = "datasets/HC3") -> None:
 
 
 def download_wac(save_dir: str = "datasets/WinningArgCorpus") -> None:
-    """
-    Telecharge le WinningArgCorpus via ConvoKit et le convertit en WAC.csv.
-
-    Colonnes produites :
-        pair_id  : identifiant de la paire de commentaires
-        text     : texte du commentaire
-        op_text  : texte du post original (OP)
-        success  : 1 si le commentaire a convaincu, 0 sinon
-    """
+    """Telecharge le WinningArgCorpus via ConvoKit et le convertit en WAC.csv."""
     import pandas as pd
     from convokit import Corpus, download
 

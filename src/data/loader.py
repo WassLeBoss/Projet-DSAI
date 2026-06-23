@@ -1,9 +1,4 @@
-"""
-Dataset loaders for WAC, GriD and HC3 datasets.
-
-Usage:
-    from src.data.loader import load_wac, load_grid, load_hc3
-"""
+"""Dataset loaders for WAC, GriD and HC3 datasets."""
 
 import os
 
@@ -26,13 +21,7 @@ def _get_wac_path(cfg: DictConfig) -> str:
 
 
 def load_wac(cfg: DictConfig) -> tuple[list[str], list[int]]:
-    """
-    Charge le WinningArgCorpus (WAC).
-
-    Retourne :
-        texts  : liste de strings (op_text + text ou text seul)
-        labels : liste de int (1 = succès, 0 = échec)
-    """
+    """Charge le WinningArgCorpus (WAC)."""
     csv_path = _get_wac_path(cfg)
     df = pd.read_csv(csv_path)
 
@@ -50,12 +39,7 @@ def load_wac(cfg: DictConfig) -> tuple[list[str], list[int]]:
 
 
 def load_wac_pairs(cfg: DictConfig) -> pd.DataFrame:
-    """
-    Charge le WAC sous forme de paires (winner, loser) pour le mode pairwise.
-
-    Retourne :
-        DataFrame avec colonnes : pair_id, winner_text, loser_text, op_text
-    """
+    """Charge le WAC sous forme de paires (winner, loser) pour le mode pairwise."""
     csv_path = _get_wac_path(cfg)
     df = pd.read_csv(csv_path)
     pairs = []
@@ -83,13 +67,7 @@ def load_wac_pairs(cfg: DictConfig) -> pd.DataFrame:
 
 
 def load_grid(cfg: DictConfig) -> tuple[list[str], list[int]]:
-    """
-    Charge le dataset GriD (détection de textes synthétiques).
-
-    Retourne :
-        texts  : liste de strings
-        labels : liste de int (1 = synthétique, 0 = humain)
-    """
+    """Charge le dataset GriD (détection de textes synthétiques)."""
     df = pd.read_csv(cfg.dataset.csv_path)
     texts = df[cfg.dataset.text_col].astype(str).tolist()
     labels = df[cfg.dataset.label_col].astype(int).tolist()
@@ -97,18 +75,7 @@ def load_grid(cfg: DictConfig) -> tuple[list[str], list[int]]:
 
 
 def load_hc3(cfg: DictConfig) -> tuple[list[str], list[int]]:
-    """
-    Charge le dataset HC3 (Human ChatGPT Comparison Corpus — reddit_eli5).
-
-    HC3 contient des colonnes 'human_answers' et 'chatgpt_answers' qui sont
-    des listes de réponses. Ce loader les aplatit en paires (texte, label) :
-        label 0 = réponse humaine
-        label 1 = réponse ChatGPT
-
-    Retourne :
-        texts  : liste de strings
-        labels : liste de int (0 = humain, 1 = ChatGPT)
-    """
+    """Charge le dataset HC3 (Human ChatGPT Comparison Corpus — reddit_eli5)."""
     import ast
 
     df = pd.read_csv(cfg.dataset.csv_path)
@@ -145,13 +112,7 @@ def load_hc3(cfg: DictConfig) -> tuple[list[str], list[int]]:
 
 
 def load_m4gt(cfg: DictConfig) -> tuple[list[str], list[int]]:
-    """
-    Charge le dataset M4GT-Bench (SubtaskA.jsonl).
-
-    Retourne :
-        texts  : liste de strings
-        labels : liste de int (1 = machine, 0 = humain)
-    """
+    """Charge le dataset M4GT-Bench (SubtaskA.jsonl)."""
     import json
 
     texts, labels = [], []

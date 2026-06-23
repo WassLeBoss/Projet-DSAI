@@ -1,4 +1,4 @@
-# ── SVM Classifier ──────────────────────────────────
+# SVM Classifier
 name: svm
 _target_: src.models.svm_classifier.SVMClassifier
 

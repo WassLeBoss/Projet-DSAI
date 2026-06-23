@@ -1,4 +1,4 @@
-# ── RoBERTa Sentence Encoder ────────────────────────
+# RoBERTa Sentence Encoder
 name: roberta
 _target_: src.encoders.roberta_encoder.RobertaEncoder
 

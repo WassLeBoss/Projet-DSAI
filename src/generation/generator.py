@@ -1,12 +1,4 @@
-"""
-Generateur d'arguments — interface unifiee pour tout LLM HuggingFace CausalLM.
-
-Usage:
-    from src.generation.generator import ArgumentGenerator
-    gen = ArgumentGenerator.from_pretrained("gpt2", cfg.llm)
-    argument = gen.generate(op_text)
-    candidates = gen.generate_n(op_text, n=10)
-"""
+"""Generateur d'arguments — interface unifiee pour tout LLM HuggingFace CausalLM."""
 
 import logging
 
@@ -21,16 +13,7 @@ REPLY_TOKEN = "[REPLY]:"
 
 
 class ArgumentGenerator:
-    """
-    Genere des arguments a partir d'un post original (OP).
-
-    Construit le prompt : "[OP]: {op_text}\\n[REPLY]: "
-    et laisse le LLM completer la reponse.
-
-    Args:
-        model_path : chemin vers le modele (fine-tune) ou ID HuggingFace
-        cfg        : config llm (temperature, top_p, max_new_tokens...)
-    """
+    """Genere des arguments a partir d'un post original (OP)."""
 
     def __init__(self, model_path: str, cfg: DictConfig) -> None:
         self.cfg = cfg
@@ -72,12 +55,7 @@ class ArgumentGenerator:
 
     @torch.no_grad()
     def generate(self, op_text: str) -> str:
-        """
-        Genere un argument pour un OP donne.
-
-        Retourne :
-            Le texte genere (sans le prompt)
-        """
+        """Genere un argument pour un OP donne."""
         # Nettoyage de l'OP pour éviter de perturber le LLM avec le message des modérateurs
         op_text = self._clean_generated_text(op_text)
         prompt = self._build_prompt(op_text)
@@ -108,10 +86,5 @@ class ArgumentGenerator:
         return self._clean_generated_text(text)
 
     def generate_n(self, op_text: str, n: int) -> list[str]:
-        """
-        Genere N arguments independants pour un meme OP.
-
-        Retourne :
-            Liste de N strings
-        """
+        """Genere N arguments independants pour un meme OP."""
         return [self.generate(op_text) for _ in range(n)]

@@ -1,4 +1,4 @@
-# ── Features stylométriques (pairwise) ──────────────
+# Features stylométriques (pairwise)
 # Utilisé uniquement avec dataset=wac (mode pairwise)
 name: features
 _target_: src.encoders.features_encoder.FeaturesEncoder

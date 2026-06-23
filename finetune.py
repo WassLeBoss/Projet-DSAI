@@ -1,16 +1,4 @@
-"""
-Point d'entree — Fine-tuning du LLM sur les arguments gagnants du WAC.
-
-Utilisation :
-    # Fine-tune GPT-2 (CPU-friendly, ~2-3h)
-    python finetune.py llm=gpt2
-
-    # Fine-tune Mistral 7B avec LoRA (GPU requis)
-    python finetune.py llm=mistral
-
-    # Afficher la config sans lancer
-    python finetune.py --cfg job
-"""
+"""Point d'entree — Fine-tuning du LLM sur les arguments gagnants du WAC."""
 
 import logging
 import os
@@ -69,7 +57,7 @@ def main(cfg: DictConfig) -> None:
         pairs_df, test_size=0.1, random_state=cfg.seed
     )
 
-    # ── Fine-tuning ──────────────────────────────────────────────────────────
+    # Fine-tuning
     from src.generation.finetuning import WACFinetuner
 
     output_dir = f"finetuned_{cfg.llm.name}"

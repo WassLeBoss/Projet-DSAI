@@ -1,12 +1,4 @@
-"""
-Point d'entree pour le fine-tuning direct de RoBERTa sur le dataset M4GT (Axe 2).
-
-Contrairement a l'approche d'extraction de features + SVM, ce script entraine
-directement les poids du Transformer pour la classification de sequence.
-
-Utilisation :
-    python finetune_roberta.py dataset=m4gt
-"""
+"""Point d'entree pour le fine-tuning direct de RoBERTa sur le dataset M4GT (Axe 2)."""
 
 import logging
 import os

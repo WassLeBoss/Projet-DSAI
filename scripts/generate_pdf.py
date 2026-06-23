@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Generateur du PDF "Guide de demarrage" pour Projet-DSAI.
-"""
+"""Generateur du PDF "Guide de demarrage" pour Projet-DSAI."""
 
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
@@ -49,7 +47,7 @@ class GuidePDF(FPDF):
             align="C",
         )
 
-    # ── Composants UI ────────────────────────────────────────────────────────
+    # Composants UI
 
     def cover_page(self):
         self.set_fill_color(*DARK_BG)
@@ -244,7 +242,7 @@ class GuidePDF(FPDF):
         self.ln(1)
 
 
-# ── Construction du PDF ──────────────────────────────────────────────────────
+# Construction du PDF
 
 
 def build_pdf(output_path: str):
@@ -253,11 +251,11 @@ def build_pdf(output_path: str):
     pdf.set_margins(12, 12, 12)
     pdf.set_auto_page_break(auto=True, margin=18)
 
-    # ── COUVERTURE ───────────────────────────────────────────────────────────
+    # COUVERTURE
     pdf.add_page()
     pdf.cover_page()
 
-    # ── PAGE 2 : INSTALLATION ────────────────────────────────────────────────
+    # PAGE 2 : INSTALLATION
     pdf.add_page()
     pdf.section_header("0. PREREQUIS & INSTALLATION", DARK_BG)
 
@@ -361,7 +359,7 @@ def build_pdf(output_path: str):
         SUCCESS,
     )
 
-    # ── PAGE 3 : AXE 1 ──────────────────────────────────────────────────────
+    # PAGE 3 : AXE 1
     pdf.add_page()
     pdf.axe_banner(
         1,
@@ -458,7 +456,7 @@ def build_pdf(output_path: str):
         ]
     )
 
-    # ── PAGE 4 : AXE 2 ──────────────────────────────────────────────────────
+    # PAGE 4 : AXE 2
     pdf.add_page()
     pdf.axe_banner(
         2,
@@ -513,7 +511,7 @@ def build_pdf(output_path: str):
         ]
     )
 
-    # ── PAGE 5 : AXE 3 ──────────────────────────────────────────────────────
+    # PAGE 5 : AXE 3
     pdf.add_page()
     pdf.axe_banner(
         3,
@@ -605,7 +603,7 @@ def build_pdf(output_path: str):
         ]
     )
 
-    # ── PAGE 6 : REFERENCE RAPIDE ────────────────────────────────────────────
+    # PAGE 6 : REFERENCE RAPIDE
     pdf.add_page()
     pdf.section_header("REFERENCE RAPIDE - Toutes les commandes dans l'ordre", DARK_BG)
 

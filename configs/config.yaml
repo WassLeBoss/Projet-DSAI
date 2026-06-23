@@ -4,11 +4,11 @@ defaults:
   - model: svm
   - _self_
 
-# ── Paramètres globaux ──────────────────────────────
+# Paramètres globaux
 seed: 42
 include_op: true   # Concaténer op_text + text comme entrée
 
-# ── Hydra outputs ───────────────────────────────────
+# Hydra outputs
 hydra:
   run:
     dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${encoder.name}_${dataset.name}
