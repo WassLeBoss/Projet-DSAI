@@ -63,7 +63,10 @@ class PromptEngineer:
     """
 
     def __init__(self, axe1_clf, feature_names: list[str], cfg: DictConfig) -> None:
-        self.clf           = axe1_clf
+        if isinstance(axe1_clf, dict) and axe1_clf.get("type") == "roberta_finetuned":
+            self.clf = axe1_clf["model"]
+        else:
+            self.clf = axe1_clf
         self.feature_names = feature_names
         self.cfg           = cfg
         self._top_features = self._extract_top_features()

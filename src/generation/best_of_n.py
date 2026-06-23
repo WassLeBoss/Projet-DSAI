@@ -24,24 +24,30 @@ log = logging.getLogger(__name__)
 
 class BestOfNSelector:
     """
-    Selectionne le meilleur argument parmi N candidats via le SVM Axe 1.
+    Selectionne le meilleur argument parmi N candidats via le SVM Axe 1 ou RoBERTa.
 
     Args:
-        axe1_clf     : SVM Axe 1 charge (sklearn SVC)
+        axe1_clf     : SVM Axe 1 charge (sklearn SVC) ou dict de RoBERTa fine-tuned
         axe1_encoder : encodeur Axe 1 (TfidfEncoder, W2VEncoder, RobertaEncoder ou FeaturesEncoder)
         cfg          : config strategy.best_of_n
     """
 
     def __init__(self, axe1_clf, axe1_encoder, cfg: DictConfig) -> None:
-        self.clf     = axe1_clf
-        self.encoder = axe1_encoder
+        if isinstance(axe1_clf, dict) and axe1_clf.get("type") == "roberta_finetuned":
+            self.clf = axe1_clf["model"]
+            self.tokenizer = axe1_clf["tokenizer"]
+            self.is_roberta = True
+        else:
+            self.clf     = axe1_clf
+            self.encoder = axe1_encoder
+            self.is_roberta = False
         self.cfg     = cfg
 
     def score_candidates(
         self, op_text: str, candidates: list[str]
     ) -> np.ndarray:
         """
-        Score chaque candidat selon le SVM Axe 1.
+        Score chaque candidat selon le SVM Axe 1 ou RoBERTa.
 
         Pour les encodeurs vectoriels (tfidf/w2v/roberta) :
             On concatene op_text + candidate pour simuler le format WAC.
@@ -49,9 +55,39 @@ class BestOfNSelector:
         Pour l'encodeur features (pairwise) :
             On calcule features(candidate, op_text) directement.
 
+        Pour RoBERTa fine-tune :
+            On utilise le tokenizer pour encoder le couple (op_text, candidate)
+            et on obtient le logit brut du modele.
+
         Retourne :
             Array de scores (decision_function), shape (n_candidates,)
         """
+        if self.is_roberta:
+            import torch
+            device = next(self.clf.parameters()).device
+            
+            input_ids_list = []
+            attention_mask_list = []
+            
+            for candidate in candidates:
+                enc = self.tokenizer(
+                    op_text, candidate, 
+                    truncation=True, max_length=512, 
+                    padding='max_length', return_tensors='pt'
+                )
+                input_ids_list.append(enc['input_ids'])
+                attention_mask_list.append(enc['attention_mask'])
+                
+            input_ids = torch.cat(input_ids_list, dim=0).unsqueeze(1).to(device)
+            attention_mask = torch.cat(attention_mask_list, dim=0).unsqueeze(1).to(device)
+            
+            with torch.no_grad():
+                outputs = self.clf(input_ids=input_ids, attention_mask=attention_mask)
+                # outputs.logits a la forme (N, 1)
+                scores = outputs.logits[:, 0].cpu().numpy()
+                
+            return scores
+
         encoder_name = self.cfg.get("axe1_encoder_name", "features")
 
         if encoder_name == "features":
