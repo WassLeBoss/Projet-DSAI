@@ -51,3 +51,5 @@ Thumbs.db
 # ── Visualisations & logs ────────────────────────────
 *.png
 *.log
+finetuned_mistral/
+finetuned_qwen/
