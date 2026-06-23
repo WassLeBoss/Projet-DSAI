@@ -11,8 +11,8 @@ then computes permutation importance on that same test set.
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -24,14 +24,12 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-
 CURRENT_DIR = Path(__file__).resolve().parent
 if str(CURRENT_DIR) not in sys.path:
     sys.path.insert(0, str(CURRENT_DIR))
 
 from data_loader import load_pairs
 from pairwise import build_argument_dataset, build_pairwise_dataset, get_feature_names
-
 
 DEFAULT_CSV_PATH = (
     "/Users/tristanjin/Documents/TELECOM_PARIS/2A_COURS/SD/Projet-DSAI/"
@@ -87,7 +85,9 @@ def load_features_dataset(csv_path: str) -> tuple[np.ndarray, np.ndarray, list[s
     return X, y, feature_names
 
 
-def load_pairwise_features_dataset(csv_path: str) -> tuple[np.ndarray, np.ndarray, list[str]]:
+def load_pairwise_features_dataset(
+    csv_path: str,
+) -> tuple[np.ndarray, np.ndarray, list[str]]:
     pairs = load_pairs(csv_path)
     X, y = build_pairwise_dataset(pairs)
     feature_names = get_feature_names()
@@ -102,10 +102,12 @@ def make_estimator(mode: str) -> Pipeline:
     else:
         raise ValueError(f"Unsupported mode: {mode}")
 
-    return Pipeline([
-        ("scaler", StandardScaler()),
-        ("model", model),
-    ])
+    return Pipeline(
+        [
+            ("scaler", StandardScaler()),
+            ("model", model),
+        ]
+    )
 
 
 def evaluate_mode(

@@ -30,7 +30,7 @@ def main(cfg: DictConfig) -> None:
     log.info("Dataset WAC   : %s", cfg.wac_csv_path)
     log.info("=" * 60)
 
-    # ── Chargement du WAC ────────────────────────────────────────────────────
+    # Chargement du WAC 
     log.info("Chargement du WAC...")
     csv_path = cfg.wac_csv_path
     if not os.path.exists(csv_path):

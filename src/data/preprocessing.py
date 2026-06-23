@@ -6,14 +6,15 @@ Usage:
 """
 
 import re
+
 import nltk
-from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 
 
 def download_nltk_resources() -> None:
     """Télécharge les ressources NLTK si nécessaires."""
-    nltk.download("wordnet",   quiet=True)
+    nltk.download("wordnet", quiet=True)
     nltk.download("stopwords", quiet=True)
 
 
@@ -33,8 +34,11 @@ def clean_text(text: str, lemmatize: bool = True) -> str:
     stop_words = set(stopwords.words("english"))
 
     tokens = text.lower().split()
-    tokens = [lemmatizer.lemmatize(t) for t in tokens if t not in stop_words] if lemmatize \
-             else [t for t in tokens if t not in stop_words]
+    tokens = (
+        [lemmatizer.lemmatize(t) for t in tokens if t not in stop_words]
+        if lemmatize
+        else [t for t in tokens if t not in stop_words]
+    )
 
     return " ".join(tokens)
 

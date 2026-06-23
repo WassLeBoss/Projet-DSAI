@@ -1,19 +1,19 @@
 from __future__ import annotations
-import matplotlib.pyplot as plt
-import argparse
-from pathlib import Path
-import sys
 
+import argparse
+import sys
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import shap
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-import shap
-
 
 CURRENT_DIR = Path(__file__).resolve().parent
 if str(CURRENT_DIR) not in sys.path:
@@ -21,7 +21,6 @@ if str(CURRENT_DIR) not in sys.path:
 
 from data_loader import load_pairs
 from pairwise import build_argument_dataset, build_pairwise_dataset, get_feature_names
-
 
 DEFAULT_CSV_PATH = (
     "/Users/tristanjin/Documents/TELECOM_PARIS/2A_COURS/SD/Projet-DSAI/"
@@ -71,7 +70,9 @@ def load_features_dataset(csv_path: str) -> tuple[np.ndarray, np.ndarray, list[s
     return X, y, feature_names
 
 
-def load_pairwise_features_dataset(csv_path: str) -> tuple[np.ndarray, np.ndarray, list[str]]:
+def load_pairwise_features_dataset(
+    csv_path: str,
+) -> tuple[np.ndarray, np.ndarray, list[str]]:
     pairs = load_pairs(csv_path)
     X, y = build_pairwise_dataset(pairs)
     feature_names = get_feature_names()
@@ -86,10 +87,12 @@ def make_estimator(mode: str) -> Pipeline:
     else:
         raise ValueError(f"Unsupported mode: {mode}")
 
-    return Pipeline([
-        ("scaler", StandardScaler()),
-        ("model", model),
-    ])
+    return Pipeline(
+        [
+            ("scaler", StandardScaler()),
+            ("model", model),
+        ]
+    )
 
 
 def evaluate_mode(
@@ -128,10 +131,10 @@ def evaluate_mode(
     print(f"AUC: {roc_auc_score(y_test, y_score):.4f}")
 
     print("\nCalcul des valeurs SHAP...")
-    
+
     scaler = estimator.named_steps["scaler"]
     model = estimator.named_steps["model"]
-    
+
     X_train_scaled = scaler.transform(X_train)
     X_test_scaled = scaler.transform(X_test)
     explainer = shap.LinearExplainer(model, X_train_scaled)
@@ -147,9 +150,7 @@ def evaluate_mode(
 
     print(f"\nTop {top_k} SHAP importances (mean absolute SHAP value):")
     for _, row in result.head(top_k).iterrows():
-        print(
-            f"- {row['feature']}: {row['shap_importance_mean']:.6f}"
-        )
+        print(f"- {row['feature']}: {row['shap_importance_mean']:.6f}")
 
     out_path = CURRENT_DIR / f"shap_importance_{mode}.csv"
     result.to_csv(out_path, index=False)
@@ -160,22 +161,22 @@ def evaluate_mode(
     print(f"\nSaved detailed results to: {out_path}")
 
     print("\nGénération du Summary Plot SHAP...")
-    
-    plt.figure() 
-    
+
+    plt.figure()
+
     # Génération du graphique
     shap.summary_plot(
-        shap_values, 
-        X_test_scaled, 
-        feature_names=feature_names, 
+        shap_values,
+        X_test_scaled,
+        feature_names=feature_names,
         max_display=top_k,
-        show=False 
+        show=False,
     )
-    
+
     plot_path = CURRENT_DIR / f"shap_summary_{mode}.png"
     plt.savefig(plot_path, dpi=300, bbox_inches="tight")
     plt.close()
-    
+
     print(f"Graphique sauvegardé sous : {plot_path}")
 
 

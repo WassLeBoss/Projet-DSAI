@@ -1,7 +1,7 @@
 """
 Point d'entree pour le fine-tuning direct de RoBERTa sur le dataset M4GT (Axe 2).
 
-Contrairement a l'approche d'extraction de features + SVM, ce script entraine 
+Contrairement a l'approche d'extraction de features + SVM, ce script entraine
 directement les poids du Transformer pour la classification de sequence.
 
 Utilisation :
@@ -14,12 +14,17 @@ import os
 import hydra
 import numpy as np
 import torch
-from datasets import Dataset
 from omegaconf import DictConfig
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
-from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
-                          Trainer, TrainingArguments)
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    Trainer,
+    TrainingArguments,
+)
+
+from datasets import Dataset
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +34,7 @@ def compute_metrics(eval_pred):
     predictions = np.argmax(predictions, axis=1)
     return {
         "accuracy": accuracy_score(labels, predictions),
-        "f1": f1_score(labels, predictions, average="weighted")
+        "f1": f1_score(labels, predictions, average="weighted"),
     }
 
 
@@ -43,9 +48,11 @@ def main(cfg: DictConfig) -> None:
     # 1. Chargement du dataset (ex: M4GT)
     if cfg.dataset.name == "m4gt":
         from src.data.loader import load_m4gt
+
         texts, labels = load_m4gt(cfg)
     elif cfg.dataset.name == "hc3":
         from src.data.loader import load_hc3
+
         texts, labels = load_hc3(cfg)
     else:
         raise ValueError("Dataset non supporté pour ce script.")
@@ -62,15 +69,17 @@ def main(cfg: DictConfig) -> None:
 
     def tokenize_data(texts, labels):
         encodings = tokenizer(texts, truncation=True, padding=True, max_length=512)
-        dataset = Dataset.from_dict({
-            "input_ids": encodings["input_ids"],
-            "attention_mask": encodings["attention_mask"],
-            "labels": labels
-        })
+        dataset = Dataset.from_dict(
+            {
+                "input_ids": encodings["input_ids"],
+                "attention_mask": encodings["attention_mask"],
+                "labels": labels,
+            }
+        )
         return dataset
 
     train_dataset = tokenize_data(texts_train, labels_train)
-    val_dataset   = tokenize_data(texts_val, labels_val)
+    val_dataset = tokenize_data(texts_val, labels_val)
 
     # 3. Initialisation du Modèle (Sequence Classification)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

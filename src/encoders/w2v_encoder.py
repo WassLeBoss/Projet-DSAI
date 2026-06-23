@@ -8,8 +8,8 @@ Usage:
 """
 
 import numpy as np
-from omegaconf import DictConfig
 from gensim.models import Word2Vec
+from omegaconf import DictConfig
 
 from src.data.preprocessing import tokenize_lemmatize
 
@@ -29,7 +29,7 @@ class W2VEncoder:
     """
 
     def __init__(self, cfg: DictConfig) -> None:
-        self.cfg   = cfg
+        self.cfg = cfg
         self._model: Word2Vec | None = None
 
     def _tokenize(self, texts: list[str]) -> list[list[str]]:
@@ -52,7 +52,7 @@ class W2VEncoder:
             X_train, X_test : arrays (n_samples, vector_size)
         """
         train_sentences = self._tokenize(texts_train)
-        test_sentences  = self._tokenize(texts_test)
+        test_sentences = self._tokenize(texts_test)
 
         self._model = Word2Vec(
             sentences=train_sentences,
@@ -64,5 +64,5 @@ class W2VEncoder:
         )
 
         X_train = np.array([self._mean_vector(s) for s in train_sentences])
-        X_test  = np.array([self._mean_vector(s) for s in test_sentences])
+        X_test = np.array([self._mean_vector(s) for s in test_sentences])
         return X_train, X_test

@@ -24,30 +24,30 @@ log = logging.getLogger(__name__)
 # Traduction features → instructions naturelles (en anglais pour les LLMs)
 FEATURE_TO_INSTRUCTION: dict[str, str] = {
     # Longueur
-    "n_words":         "Write a detailed response of at least 150 words.",
-    "n_sentences":     "Structure your argument in multiple clear sentences.",
-    "n_paragraphs":    "Organize your response into distinct paragraphs.",
+    "n_words": "Write a detailed response of at least 150 words.",
+    "n_sentences": "Structure your argument in multiple clear sentences.",
+    "n_paragraphs": "Organize your response into distinct paragraphs.",
     # Liens et references
-    "n_links":         "Support your claims with relevant links or references.",
-    "n_edu_links":     "Cite academic or educational sources (.edu) when possible.",
-    "n_examples":      "Use concrete examples (e.g., 'for example', 'for instance').",
-    "n_quotes":        "Quote relevant passages to support your argument.",
+    "n_links": "Support your claims with relevant links or references.",
+    "n_edu_links": "Cite academic or educational sources (.edu) when possible.",
+    "n_examples": "Use concrete examples (e.g., 'for example', 'for instance').",
+    "n_quotes": "Quote relevant passages to support your argument.",
     # Pronoms et engagement
-    "n_2p":            "Directly address the original poster using 'you'.",
-    "n_1sg":           "Use first-person singular ('I think', 'I believe') to personalize.",
-    "n_1pl":           "Use inclusive language ('we', 'our') to create common ground.",
+    "n_2p": "Directly address the original poster using 'you'.",
+    "n_1sg": "Use first-person singular ('I think', 'I believe') to personalize.",
+    "n_1pl": "Use inclusive language ('we', 'our') to create common ground.",
     # Hedges et nuance
-    "n_hedges":        "Acknowledge uncertainty where appropriate ('it seems', 'perhaps').",
+    "n_hedges": "Acknowledge uncertainty where appropriate ('it seems', 'perhaps').",
     # Lisibilite
-    "flesch_kincaid":  "Keep sentences concise and easy to read.",
+    "flesch_kincaid": "Keep sentences concise and easy to read.",
     # Sentiment
-    "n_positive":      "Frame your argument positively and constructively.",
+    "n_positive": "Frame your argument positively and constructively.",
     # Markdown
-    "n_bullet_list":   "Use bullet points to list your key arguments clearly.",
-    "n_bolds":         "Bold the most important points in your response.",
+    "n_bullet_list": "Use bullet points to list your key arguments clearly.",
+    "n_bolds": "Bold the most important points in your response.",
     # Richesse lexicale
-    "type_token":      "Use varied and rich vocabulary.",
-    "word_entropy":    "Maintain lexical diversity throughout your response.",
+    "type_token": "Use varied and rich vocabulary.",
+    "word_entropy": "Maintain lexical diversity throughout your response.",
 }
 
 
@@ -68,7 +68,7 @@ class PromptEngineer:
         else:
             self.clf = axe1_clf
         self.feature_names = feature_names
-        self.cfg           = cfg
+        self.cfg = cfg
         self._top_features = self._extract_top_features()
 
     def _extract_top_features(self) -> list[str]:
@@ -79,14 +79,19 @@ class PromptEngineer:
         Retourne les top_k features avec coefficient positif le plus eleve.
         """
         if not hasattr(self.clf, "coef_"):
-            log.warning("Le SVM n'a pas de coef_ (kernel non lineaire). "
-                        "Utilisation de toutes les features disponibles.")
-            return list(FEATURE_TO_INSTRUCTION.keys())[:self.cfg.top_k_features]
+            log.warning(
+                "Le SVM n'a pas de coef_ (kernel non lineaire). "
+                "Utilisation de toutes les features disponibles."
+            )
+            return list(FEATURE_TO_INSTRUCTION.keys())[: self.cfg.top_k_features]
 
         coefs = self.clf.coef_[0]  # shape (n_features,)
-        top_indices = np.argsort(coefs)[::-1][:self.cfg.top_k_features]
-        top_features = [self.feature_names[i] for i in top_indices
-                        if self.feature_names[i] in FEATURE_TO_INSTRUCTION]
+        top_indices = np.argsort(coefs)[::-1][: self.cfg.top_k_features]
+        top_features = [
+            self.feature_names[i]
+            for i in top_indices
+            if self.feature_names[i] in FEATURE_TO_INSTRUCTION
+        ]
 
         log.info("Top features pour le prompt : %s", top_features)
         return top_features

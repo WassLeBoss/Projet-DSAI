@@ -37,9 +37,7 @@ class TfidfEncoder:
             return [clean_text(t, lemmatize=True) for t in texts]
         return texts
 
-    def fit_transform(
-        self, texts_train: list[str], texts_test: list[str]
-    ):
+    def fit_transform(self, texts_train: list[str], texts_test: list[str]):
         """
         Fit sur le train, transform train + test.
 
@@ -47,10 +45,10 @@ class TfidfEncoder:
             X_train, X_test : matrices scipy.sparse (n_samples, n_features)
         """
         train_clean = self._preprocess(texts_train)
-        test_clean  = self._preprocess(texts_test)
+        test_clean = self._preprocess(texts_test)
 
         X_train = self._vectorizer.fit_transform(train_clean)
-        X_test  = self._vectorizer.transform(test_clean)
+        X_test = self._vectorizer.transform(test_clean)
         return X_train, X_test
 
     def transform(self, texts: list[str]):

@@ -16,7 +16,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 log = logging.getLogger(__name__)
 
-OP_TOKEN    = "[OP]:"
+OP_TOKEN = "[OP]:"
 REPLY_TOKEN = "[REPLY]:"
 
 
@@ -53,15 +53,21 @@ class ArgumentGenerator:
 
     def _clean_generated_text(self, text: str) -> str:
         import re
+
         # 1. Enlever les footnotes des moderateurs CMV
-        text = re.sub(r"> \*Hello, users of CMV! This is a footnote from your moderators.*?Happy CMVing!\*", "", text, flags=re.DOTALL | re.IGNORECASE)
+        text = re.sub(
+            r"> \*Hello, users of CMV! This is a footnote from your moderators.*?Happy CMVing!\*",
+            "",
+            text,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
         # 2. Enlever les liens markdown hallucinés [nom](url) -> nom
         text = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", text)
         # 3. Enlever les longues series de nombres (2 3 4 5 6 ...)
         text = re.sub(r"\b(?:\d+\s+){5,}\d+\b", "", text)
         # 4. Enlever les ponctuations bizarres ou orphelines au tout debut du texte (ex: "...?),")
         text = re.sub(r"^[\W_]+", "", text)
-        
+
         return text.strip()
 
     @torch.no_grad()
@@ -75,7 +81,7 @@ class ArgumentGenerator:
         # Nettoyage de l'OP pour éviter de perturber le LLM avec le message des modérateurs
         op_text = self._clean_generated_text(op_text)
         prompt = self._build_prompt(op_text)
-        
+
         inputs = self.tokenizer(
             prompt,
             return_tensors="pt",
@@ -95,9 +101,9 @@ class ArgumentGenerator:
 
         # Decode uniquement les nouveaux tokens (pas le prompt)
         n_prompt_tokens = inputs["input_ids"].shape[1]
-        generated_ids   = output_ids[0, n_prompt_tokens:]
+        generated_ids = output_ids[0, n_prompt_tokens:]
         text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
-        
+
         # Nettoyage des hallucinations post-generation
         return self._clean_generated_text(text)
 

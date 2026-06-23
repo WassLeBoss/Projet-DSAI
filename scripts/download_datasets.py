@@ -30,6 +30,7 @@ def download_hc3(save_dir: str = "datasets/HC3") -> None:
     Compatible avec datasets >= 5.0 (utilise huggingface_hub directement).
     """
     import glob
+
     import pandas as pd
     from huggingface_hub import snapshot_download
 
@@ -45,10 +46,14 @@ def download_hc3(save_dir: str = "datasets/HC3") -> None:
     print(f"[OK]  Fichiers bruts -> {local_dir}")
 
     # Cherche les fichiers parquet telecharges
-    parquet_files = glob.glob(os.path.join(local_dir, "**", "*.parquet"), recursive=True)
+    parquet_files = glob.glob(
+        os.path.join(local_dir, "**", "*.parquet"), recursive=True
+    )
     if not parquet_files:
         # Fallback : cherche aussi des JSON/JSONL
-        parquet_files = glob.glob(os.path.join(local_dir, "**", "*.json*"), recursive=True)
+        parquet_files = glob.glob(
+            os.path.join(local_dir, "**", "*.json*"), recursive=True
+        )
 
     if not parquet_files:
         print("[WARN] Aucun fichier parquet trouve. Contenu du dossier :")
@@ -108,24 +113,34 @@ def download_wac(save_dir: str = "datasets/WinningArgCorpus") -> None:
             success = meta.get("success", None)
             if success is None:
                 continue
-            rows.append({
-                "pair_id": pair_id,
-                "text":    utt.text or "",
-                "op_text": op_text,
-                "success": int(success),
-            })
+            rows.append(
+                {
+                    "pair_id": pair_id,
+                    "text": utt.text or "",
+                    "op_text": op_text,
+                    "success": int(success),
+                }
+            )
 
     df = pd.DataFrame(rows)
     out_path = os.path.join(save_dir, "WAC.csv")
     df.to_csv(out_path, index=False)
-    print(f"[OK]  WAC.csv -> {out_path}  ({len(df)} lignes, {df['success'].sum()} succes)")
+    print(
+        f"[OK]  WAC.csv -> {out_path}  ({len(df)} lignes, {df['success'].sum()} succes)"
+    )
     print("Colonnes :", df.columns.tolist())
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Telechargement des datasets du projet.")
-    parser.add_argument("--dataset", choices=["hc3", "wac"], help="Dataset a telecharger")
-    parser.add_argument("--all", action="store_true", help="Telecharger tous les datasets")
+    parser = argparse.ArgumentParser(
+        description="Telechargement des datasets du projet."
+    )
+    parser.add_argument(
+        "--dataset", choices=["hc3", "wac"], help="Dataset a telecharger"
+    )
+    parser.add_argument(
+        "--all", action="store_true", help="Telecharger tous les datasets"
+    )
     args = parser.parse_args()
 
     if args.all or args.dataset == "hc3":

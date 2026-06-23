@@ -32,7 +32,7 @@ from transformers import (
 log = logging.getLogger(__name__)
 
 # Tokens speciaux pour structurer le prompt
-OP_TOKEN    = "[OP]:"
+OP_TOKEN = "[OP]:"
 REPLY_TOKEN = "[REPLY]:"
 
 
@@ -51,15 +51,15 @@ class WACDebateDataset(Dataset):
         tokenizer,
         max_length: int = 512,
     ) -> None:
-        self.tokenizer  = tokenizer
+        self.tokenizer = tokenizer
         self.max_length = max_length
-        self.examples   = self._build_examples(pairs_df)
+        self.examples = self._build_examples(pairs_df)
 
     def _build_examples(self, df: pd.DataFrame) -> list[dict]:
         examples = []
         for _, row in df.iterrows():
             prompt = f"{OP_TOKEN} {row['op_text']}\n{REPLY_TOKEN} "
-            full   = prompt + row["winner_text"] + self.tokenizer.eos_token
+            full = prompt + row["winner_text"] + self.tokenizer.eos_token
 
             enc = self.tokenizer(
                 full,
@@ -68,7 +68,7 @@ class WACDebateDataset(Dataset):
                 padding="max_length",
                 return_tensors="pt",
             )
-            input_ids      = enc["input_ids"].squeeze()
+            input_ids = enc["input_ids"].squeeze()
             attention_mask = enc["attention_mask"].squeeze()
 
             # Masque la loss sur la partie prompt (labels = -100)
@@ -80,11 +80,13 @@ class WACDebateDataset(Dataset):
             labels = input_ids.clone()
             labels[:prompt_len] = -100  # pas de loss sur le prompt OP
 
-            examples.append({
-                "input_ids":      input_ids,
-                "attention_mask": attention_mask,
-                "labels":         labels,
-            })
+            examples.append(
+                {
+                    "input_ids": input_ids,
+                    "attention_mask": attention_mask,
+                    "labels": labels,
+                }
+            )
         return examples
 
     def __len__(self) -> int:
@@ -114,6 +116,7 @@ class WACFinetuner:
         model_kwargs = {}
         if getattr(cfg, "quantize_4bit", False):
             from transformers import BitsAndBytesConfig
+
             log.info("Activation de la quantification 4-bit (QLoRA)...")
             model_kwargs["quantization_config"] = BitsAndBytesConfig(
                 load_in_4bit=True,
@@ -123,17 +126,15 @@ class WACFinetuner:
             )
             model_kwargs["device_map"] = "auto"
 
-        self.model = AutoModelForCausalLM.from_pretrained(
-            cfg.model_id, 
-            **model_kwargs
-        )
+        self.model = AutoModelForCausalLM.from_pretrained(cfg.model_id, **model_kwargs)
 
         if cfg.use_lora:
             self._apply_lora()
 
     def _apply_lora(self) -> None:
         """Applique LoRA au modele (necessite peft)."""
-        from peft import LoraConfig, get_peft_model, TaskType
+        from peft import LoraConfig, TaskType, get_peft_model
+
         lora_config = LoraConfig(
             r=self.cfg.lora_r,
             lora_alpha=self.cfg.lora_alpha,
@@ -144,7 +145,9 @@ class WACFinetuner:
         self.model = get_peft_model(self.model, lora_config)
         self.model.print_trainable_parameters()
 
-    def train(self, train_pairs: pd.DataFrame, output_dir: str = "outputs/finetuned") -> None:
+    def train(
+        self, train_pairs: pd.DataFrame, output_dir: str = "outputs/finetuned"
+    ) -> None:
         """
         Lance le fine-tuning.
 
@@ -152,8 +155,12 @@ class WACFinetuner:
             train_pairs : DataFrame avec colonnes winner_text, op_text
             output_dir  : dossier de sauvegarde du modele
         """
-        log.info("Construction du dataset de fine-tuning (%d paires)...", len(train_pairs))
-        dataset = WACDebateDataset(train_pairs, self.tokenizer, self.cfg.max_input_length)
+        log.info(
+            "Construction du dataset de fine-tuning (%d paires)...", len(train_pairs)
+        )
+        dataset = WACDebateDataset(
+            train_pairs, self.tokenizer, self.cfg.max_input_length
+        )
 
         training_args = TrainingArguments(
             output_dir=output_dir,
@@ -164,7 +171,9 @@ class WACFinetuner:
             logging_steps=50,
             report_to="none",
             fp16=torch.cuda.is_available(),
-            gradient_accumulation_steps=getattr(self.cfg, "gradient_accumulation_steps", 1),
+            gradient_accumulation_steps=getattr(
+                self.cfg, "gradient_accumulation_steps", 1
+            ),
             gradient_checkpointing=getattr(self.cfg, "quantize_4bit", False),
         )
 

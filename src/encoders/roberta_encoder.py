@@ -27,7 +27,7 @@ class RobertaEncoder:
     """
 
     def __init__(self, cfg: DictConfig) -> None:
-        self.cfg    = cfg
+        self.cfg = cfg
         self._model = SentenceTransformer(cfg.model_name)
 
     def _encode(self, texts: list[str]) -> np.ndarray:
@@ -50,7 +50,7 @@ class RobertaEncoder:
             X_train, X_test : arrays (n_samples, embedding_dim)
         """
         X_train = self._encode(texts_train)
-        X_test  = self._encode(texts_test)
+        X_test = self._encode(texts_test)
         return X_train, X_test
 
     def transform(self, texts: list[str]) -> np.ndarray:

@@ -38,14 +38,12 @@ class BestOfNSelector:
             self.tokenizer = axe1_clf["tokenizer"]
             self.is_roberta = True
         else:
-            self.clf     = axe1_clf
+            self.clf = axe1_clf
             self.encoder = axe1_encoder
             self.is_roberta = False
-        self.cfg     = cfg
+        self.cfg = cfg
 
-    def score_candidates(
-        self, op_text: str, candidates: list[str]
-    ) -> np.ndarray:
+    def score_candidates(self, op_text: str, candidates: list[str]) -> np.ndarray:
         """
         Score chaque candidat selon le SVM Axe 1 ou RoBERTa.
 
@@ -64,28 +62,34 @@ class BestOfNSelector:
         """
         if self.is_roberta:
             import torch
+
             device = next(self.clf.parameters()).device
-            
+
             input_ids_list = []
             attention_mask_list = []
-            
+
             for candidate in candidates:
                 enc = self.tokenizer(
-                    op_text, candidate, 
-                    truncation=True, max_length=512, 
-                    padding='max_length', return_tensors='pt'
+                    op_text,
+                    candidate,
+                    truncation=True,
+                    max_length=512,
+                    padding="max_length",
+                    return_tensors="pt",
                 )
-                input_ids_list.append(enc['input_ids'])
-                attention_mask_list.append(enc['attention_mask'])
-                
+                input_ids_list.append(enc["input_ids"])
+                attention_mask_list.append(enc["attention_mask"])
+
             input_ids = torch.cat(input_ids_list, dim=0).unsqueeze(1).to(device)
-            attention_mask = torch.cat(attention_mask_list, dim=0).unsqueeze(1).to(device)
-            
+            attention_mask = (
+                torch.cat(attention_mask_list, dim=0).unsqueeze(1).to(device)
+            )
+
             with torch.no_grad():
                 outputs = self.clf(input_ids=input_ids, attention_mask=attention_mask)
                 # outputs.logits a la forme (N, 1)
                 scores = outputs.logits[:, 0].cpu().numpy()
-                
+
             return scores
 
         encoder_name = self.cfg.get("axe1_encoder_name", "features")
@@ -93,6 +97,7 @@ class BestOfNSelector:
         if encoder_name == "features":
             # Mode features : on calcule le vecteur de features directement
             from src.features.pairwise import build_feature_vector, get_feature_names
+
             keys = get_feature_names()
             X = []
             for candidate in candidates:
@@ -109,9 +114,7 @@ class BestOfNSelector:
         scores = self.clf.decision_function(X)
         return scores
 
-    def select(
-        self, op_text: str, candidates: list[str]
-    ) -> tuple[str, np.ndarray]:
+    def select(self, op_text: str, candidates: list[str]) -> tuple[str, np.ndarray]:
         """
         Selectionne le meilleur candidat.
 
@@ -122,7 +125,7 @@ class BestOfNSelector:
         Retourne :
             (best_candidate, all_scores)
         """
-        scores   = self.score_candidates(op_text, candidates)
+        scores = self.score_candidates(op_text, candidates)
         best_idx = int(np.argmax(scores))
 
         if self.cfg.get("verbose", False):
@@ -132,6 +135,8 @@ class BestOfNSelector:
 
         log.info(
             "Best-of-%d : candidat #%d selectionne (score=%.4f)",
-            len(candidates), best_idx, scores[best_idx],
+            len(candidates),
+            best_idx,
+            scores[best_idx],
         )
         return candidates[best_idx], scores

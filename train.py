@@ -41,16 +41,18 @@ def _build_encoder(cfg: DictConfig):
     name = cfg.encoder.name
     if name == "tfidf":
         from src.encoders.tfidf_encoder import TfidfEncoder
+
         return TfidfEncoder(cfg.encoder)
     elif name == "w2v":
         from src.encoders.w2v_encoder import W2VEncoder
+
         return W2VEncoder(cfg.encoder)
     elif name == "roberta":
         from src.encoders.roberta_encoder import RobertaEncoder
+
         return RobertaEncoder(cfg.encoder)
     else:
         raise ValueError(f"Encodeur inconnu : {name}")
-
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
@@ -64,13 +66,13 @@ def main(cfg: DictConfig) -> None:
     # ── Chargement des données ───────────────────────────────────────────────
     if cfg.encoder.name == "features":
         # Mode pairwise (WAC uniquement)
-        from src.data.loader           import load_wac_pairs
+        from src.data.loader import load_wac_pairs
         from src.encoders.features_encoder import FeaturesEncoder
 
         pairs = load_wac_pairs(cfg)
         split = int(len(pairs) * (1 - cfg.dataset.test_size))
         pairs_train = pairs.iloc[:split].reset_index(drop=True)
-        pairs_test  = pairs.iloc[split:].reset_index(drop=True)
+        pairs_test = pairs.iloc[split:].reset_index(drop=True)
 
         encoder = FeaturesEncoder(cfg.encoder)
         X_train, X_test, y_train, y_test = encoder.fit_transform_pairwise(
@@ -81,21 +83,26 @@ def main(cfg: DictConfig) -> None:
         # Mode vectoriel (TF-IDF / W2V / RoBERTa)
         if cfg.dataset.name == "wac":
             from src.data.loader import load_wac
+
             texts, labels = load_wac(cfg)
         elif cfg.dataset.name == "grid":
             from src.data.loader import load_grid
+
             texts, labels = load_grid(cfg)
         elif cfg.dataset.name == "hc3":
             from src.data.loader import load_hc3
+
             texts, labels = load_hc3(cfg)
         elif cfg.dataset.name == "m4gt":
             from src.data.loader import load_m4gt
+
             texts, labels = load_m4gt(cfg)
         else:
             raise ValueError(f"Dataset inconnu : {cfg.dataset.name}")
 
         X_raw_train, X_raw_test, y_train, y_test = train_test_split(
-            texts, labels,
+            texts,
+            labels,
             test_size=cfg.dataset.test_size,
             random_state=cfg.seed,
             stratify=labels if cfg.dataset.stratify else None,
@@ -104,10 +111,13 @@ def main(cfg: DictConfig) -> None:
         encoder = _build_encoder(cfg)
         X_train, X_test = encoder.fit_transform(X_raw_train, X_raw_test)
 
-    log.info("Train : %d exemples | Test : %d exemples", X_train.shape[0], X_test.shape[0])
+    log.info(
+        "Train : %d exemples | Test : %d exemples", X_train.shape[0], X_test.shape[0]
+    )
 
     # ── Entraînement & Évaluation ────────────────────────────────────────────
     from src.models.svm_classifier import SVMClassifier
+
     classifier = SVMClassifier(cfg.model)
     metrics = classifier.train_and_evaluate(X_train, X_test, y_train, y_test)
 

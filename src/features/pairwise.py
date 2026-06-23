@@ -16,8 +16,8 @@ Usage:
 import numpy as np
 import pandas as pd
 
-from src.features.style     import style_features
 from src.features.interplay import interplay_features
+from src.features.style import style_features
 
 
 def build_feature_vector(text: str, op_text: str) -> dict[str, float]:
@@ -55,13 +55,13 @@ def build_pairwise_dataset(
         X : array (n_pairs, n_features) — différences de features
         y : array (n_pairs,) — labels 0 ou 1
     """
-    rng  = np.random.default_rng(random_state)
+    rng = np.random.default_rng(random_state)
     keys = get_feature_names()
     X_rows, y_rows = [], []
 
     for _, row in pairs_df.iterrows():
         fw = build_feature_vector(row["winner_text"], row["op_text"])
-        fl = build_feature_vector(row["loser_text"],  row["op_text"])
+        fl = build_feature_vector(row["loser_text"], row["op_text"])
 
         if rng.random() < 0.5:
             diff = np.array([fw[k] - fl[k] for k in keys])

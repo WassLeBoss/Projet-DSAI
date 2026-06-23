@@ -1,106 +1,117 @@
-# Projet-DSAI : Persuasion, Détection d'IA et Génération Stratégique
+# Projet DSAI : Persuasion, Détection d'IA et Génération Stratégique
 
-Projet de la filière DSAI — Analyse d'arguments, détection de textes synthétiques et génération par Modèles de Langage (LLMs).  
-En collaboration avec M. Tristan JIN.
+Ce dépôt contient le code source de notre projet réalisé dans le cadre de la filière DSAI. Le projet porte sur l'analyse d'arguments (dataset WAC), la détection de textes générés par IA (datasets HC3 & M4GT) et la génération de discours persuasif à l'aide de Modèles de Langage (LLMs).
+
+Projet supervisé par : M. Tristan JIN.
 
 ---
 
-## Structure du projet
+## 1. Structure du projet
 
 ```text
 Projet-DSAI/
 │
-├── configs/                    # Configs Hydra (YAML)
-│   ├── config.yaml             # Config principale Axes 1 & 2
-│   ├── dataset/                # wac, grid, hc3, m4gt
+├── configs/                    # Fichiers de configuration Hydra (YAML)
+│   ├── dataset/                # wac, hc3, m4gt, grid
 │   ├── encoder/                # tfidf, w2v, roberta, features
 │   ├── model/                  # svm
-│   └── generation/             # Configs pour l'Axe 3 (Génération)
-│       ├── config_generate.yaml
-│       ├── llm/                # gpt2, mistral
-│       └── strategy/           # best_of_n, prompt_eng
+│   └── generation/             # Configuration de l'Axe 3 (Génération)
 │
 ├── src/
-│   ├── data/                   # Chargement & preprocessing
-│   ├── features/               # Features stylistiques & pairwise (Jaccard)
-│   ├── encoders/               # TF-IDF, W2V, RoBERTa, Features
-│   ├── models/                 # SVM classifier
-│   └── generation/             # Génération (LLMs), Fine-tuning (QLoRA), Evaluateurs
+│   ├── data/                   # Chargement et prétraitement (WAC, HC3, M4GT)
+│   ├── features/               # Extraction de features (stylistiques, Jaccard)
+│   ├── encoders/               # Encodeurs : TF-IDF, Word2Vec, RoBERTa
+│   ├── models/                 # Modèles de classification (SVM)
+│   └── generation/             # Logique de génération (Best-of-N, prompt engineering)
 │
-├── datasets/                   # Données brutes (non versionnées)
+├── archives/                   # Anciens rapports et scripts obsolètes
+├── datasets/                   # Dossier contenant les données brutes
+├── outputs/                    # Résultats d'exécution et logs générés par Hydra
 │
-├── outputs/                    # Résultats, Logs et CSV générés par Hydra
+├── train.py                    # Entraînement des classifieurs SVM (Axes 1 & 2)
+├── finetune_roberta.py         # Script de fine-tuning de RoBERTa (Axe 2 M4GT)
+├── finetune.py                 # Fine-tuning des LLMs (Axe 3 - LoRA/bitsandbytes)
+├── generate.py                 # Génération d'arguments et création du rapport final
+├── evaluate.py                 # Évaluation et visualisation (PCA / t-SNE)
 │
-├── train.py                    # Entraînement Axes 1 & 2 (SVM)
-├── evaluate.py                 # Évaluation et visualisation (t-SNE)
-├── finetune.py                 # Entraînement LLM Axe 3 (LoRA / bitsandbytes)
-├── generate.py                 # Génération Best-of-N et création du rapport CSV/HTML
-├── rapport_projet_dsai.tex     # Rapport académique final en LaTeX
-└── requirements.txt
+├── scripts/                    # Scripts utilitaires (téléchargement, PDF generation)
+├── projetSD.tex                # Code source du rapport en LaTeX
+└── requirements.txt            # Liste des dépendances Python
 ```
 
 ---
 
-## Installation et Environnement
+## 2. Installation de l'environnement
+
+Il est recommandé d'utiliser un environnement virtuel (Python 3.10+).
 
 ```bash
-# 1. Créer l'environnement virtuel
+# Création de l'environnement virtuel
 python -m venv env
-source env/bin/activate  # Sur Windows : .\env\Scripts\activate
 
-# 2. Installer les dépendances
+# Activation (Windows)
+.\env\Scripts\activate
+# Activation (Linux / macOS)
+source env/bin/activate
+
+# Installation des dépendances
 pip install -r requirements.txt
 ```
-*(Note : Pour le fine-tuning Mistral sur GPU, assurez-vous d'avoir une machine compatible CUDA car le package `bitsandbytes` sera utilisé).*
+
+*(Note : Pour le fine-tuning avec Mistral, une machine disposant d'un GPU compatible CUDA est nécessaire pour utiliser `bitsandbytes` et `peft`)*.
+
+Pour télécharger et formater les datasets requis par le projet, lancez le script utilitaire suivant :
+```bash
+python -X utf8 scripts/download_datasets.py --all
+```
 
 ---
 
-## Utilisation et Exécution (Pipeline Complet)
+## 3. Commandes d'exécution
 
-Le projet utilise **Hydra** pour une configuration dynamique et sans hardcoding.
+Le projet est paramétré à l'aide d'**Hydra**, ce qui permet de modifier les paramètres directement depuis la ligne de commande.
 
-### 1. Axe 1 et 2 : Entraînement des Classifieurs (SVM)
-
+### Axe 1 : Évaluation de la persuasion (Winning Argument Corpus)
+Entraînement d'un SVM pour prédire si un argument réussit à changer l'opinion d'un utilisateur.
 ```bash
-# Axe 1 : Prédire les arguments gagnants (WAC) avec les features stylistiques
 python train.py dataset=wac encoder=features
-
-# Axe 2 : Détecter les IA (HC3) avec l'encodeur RoBERTa
-python train.py dataset=hc3 encoder=roberta
 ```
-Les modèles entraînés (`.pkl`) seront sauvegardés dans le dossier d'exécution et devront être utilisés pour l'Axe 3.
 
-### 2. Axe 3 : Fine-Tuning du LLM
+### Axe 2 : Détection d'IA (Human vs ChatGPT)
+Entraînement de modèles pour différencier les textes humains de ceux générés par IA.
+```bash
+# Baseline avec SVM et TF-IDF sur le dataset HC3
+python train.py dataset=hc3 encoder=tfidf
+
+# Fine-tuning complet de RoBERTa sur le dataset M4GT
+python finetune_roberta.py dataset=m4gt
+```
+
+### Axe 3 : Génération Stratégique
+La génération utilise les modèles des Axes 1 et 2 pour guider la création de texte.
 
 ```bash
-# Fine-tuner un LLM (Recommandé sur nœud GPU ex: nodemm01)
+# 1. Fine-tuning du LLM sur les arguments gagnants
 python finetune.py llm=gpt2
-# ou pour Mistral avec QLoRA : python finetune.py llm=mistral
-```
 
-### 3. Axe 3 : Génération Stratégique et Évaluation
-```bash
-# Générer des arguments et les évaluer automatiquement
+# 2. Génération et évaluation Best-of-N
 python generate.py strategy=best_of_n \
     llm.model_id=outputs/finetuned_gpt2/ \
     axe1.model_path=axe1_svm_features_wac.pkl \
     axe1.encoder_name=features \
-    axe2.model_path=axe2_svm_roberta_hc3.pkl \
+    axe2.model_path=outputs/roberta_finetuned_m4gt/best_model \
     axe2.encoder_name=roberta
 ```
-> **Rapport :** À la fin du script, un fichier `generation_report.csv` et un fichier visuel `generation_report.html` seront générés contenant les textes créés, leurs scores de persuasion (Axe 1) et leurs scores d'authenticité humaine (Axe 2).
+À l'issue de la génération, un rapport au format HTML (`generation_report.html`) et un fichier CSV sont créés avec les textes produits et leurs scores respectifs.
 
 ---
 
-## Contributions de l'Équipe
+## 4. Équipe
 
-*Veuillez remplacer les crochets par les prénoms, noms et tâches spécifiques de chaque membre de l'équipe.*
+Projet réalisé par :
+- **Nicolas CASTEL** 
+- **Wassim SMATI** 
 
-- **[Prénom Nom] :** [À compléter - Ex: Conception de l'Axe 1, feature engineering, intégration VADER, optimisation RAM (scipy.sparse).]
-- **[Prénom Nom] :** [À compléter - Ex: Conception de l'Axe 2, implémentation des encodeurs RoBERTa/W2V, visualisation t-SNE, gestion du dépôt Git.]
-- **Wassim [Nom de Famille] :** [À compléter - Ex: Responsable de l'Axe 3, développement du pipeline QLoRA pour Mistral, génération Best-of-N, évaluation couplée et rédaction du rapport final LaTeX.]
+Outils d'organisation : Git/GitHub pour le versioning, Discord pour les réunions, et utilisation des serveurs de l'école (`nodecpu01`, `nodemm01`) pour les calculs lourds.
 
-**Organisation du groupe :**
-- Réunions synchrones via Discord/Teams.
-- Suivi du code et gestion de version via Git/GitHub.
-- Expérimentations lourdes mutualisées sur les serveurs de l'école (`nodecpu01`, `nodemm01`) via `tmux` et `nohup`.
+

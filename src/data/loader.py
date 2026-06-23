@@ -6,6 +6,7 @@ Usage:
 """
 
 import os
+
 import pandas as pd
 from omegaconf import DictConfig
 
@@ -61,7 +62,7 @@ def load_wac_pairs(cfg: DictConfig) -> pd.DataFrame:
 
     for pair_id, group in df.groupby("pair_id"):
         winners = group[group[cfg.dataset.label_col] == 1.0]
-        losers  = group[group[cfg.dataset.label_col] == 0.0]
+        losers = group[group[cfg.dataset.label_col] == 0.0]
 
         if winners.empty or losers.empty:
             continue  # paire incomplète : ignorée
@@ -69,12 +70,14 @@ def load_wac_pairs(cfg: DictConfig) -> pd.DataFrame:
         w = winners.iloc[0]
         l = losers.iloc[0]
 
-        pairs.append({
-            "pair_id":     pair_id,
-            "winner_text": str(w[cfg.dataset.text_col]),
-            "loser_text":  str(l[cfg.dataset.text_col]),
-            "op_text":     str(w[cfg.dataset.op_col]),
-        })
+        pairs.append(
+            {
+                "pair_id": pair_id,
+                "winner_text": str(w[cfg.dataset.text_col]),
+                "loser_text": str(l[cfg.dataset.text_col]),
+                "op_text": str(w[cfg.dataset.op_col]),
+            }
+        )
 
     return pd.DataFrame(pairs)
 
@@ -88,7 +91,7 @@ def load_grid(cfg: DictConfig) -> tuple[list[str], list[int]]:
         labels : liste de int (1 = synthétique, 0 = humain)
     """
     df = pd.read_csv(cfg.dataset.csv_path)
-    texts  = df[cfg.dataset.text_col].astype(str).tolist()
+    texts = df[cfg.dataset.text_col].astype(str).tolist()
     labels = df[cfg.dataset.label_col].astype(int).tolist()
     return texts, labels
 
@@ -150,9 +153,10 @@ def load_m4gt(cfg: DictConfig) -> tuple[list[str], list[int]]:
         labels : liste de int (1 = machine, 0 = humain)
     """
     import json
+
     texts, labels = [], []
     max_samples = cfg.dataset.get("max_samples", None)
-    
+
     with open(cfg.dataset.path, "r", encoding="utf-8") as f:
         for i, line in enumerate(f):
             if max_samples and i >= max_samples:
@@ -163,5 +167,5 @@ def load_m4gt(cfg: DictConfig) -> tuple[list[str], list[int]]:
                 labels.append(int(data[cfg.dataset.label_col]))
             except (json.JSONDecodeError, KeyError):
                 continue
-                
+
     return texts, labels

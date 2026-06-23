@@ -14,8 +14,8 @@ from pathlib import Path
 
 import numpy as np
 from omegaconf import DictConfig
-from sklearn.svm import SVC, LinearSVC
 from sklearn.metrics import classification_report, roc_auc_score
+from sklearn.svm import SVC, LinearSVC
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +23,8 @@ log = logging.getLogger(__name__)
 @dataclass
 class EvalMetrics:
     """Résultats d'évaluation du classifieur."""
-    auc:    float
+
+    auc: float
     report: str
 
 
@@ -41,8 +42,8 @@ class SVMClassifier:
         if cfg.kernel == "linear":
             self._clf = LinearSVC(
                 class_weight=cfg.class_weight,
-                dual=False, # Recommandé quand n_samples > n_features
-                max_iter=5000
+                dual=False,  # Recommandé quand n_samples > n_features
+                max_iter=5000,
             )
         else:
             self._clf = SVC(
@@ -53,9 +54,9 @@ class SVMClassifier:
     def train_and_evaluate(
         self,
         X_train: np.ndarray,
-        X_test:  np.ndarray,
+        X_test: np.ndarray,
         y_train: np.ndarray,
-        y_test:  np.ndarray,
+        y_test: np.ndarray,
     ) -> EvalMetrics:
         """
         Entraîne le SVM et évalue sur le test set.
@@ -63,16 +64,19 @@ class SVMClassifier:
         Retourne :
             EvalMetrics avec AUC et rapport de classification complet
         """
-        log.info("Entraînement du SVM (kernel=%s, class_weight=%s)…",
-                 self.cfg.kernel, self.cfg.class_weight)
+        log.info(
+            "Entraînement du SVM (kernel=%s, class_weight=%s)…",
+            self.cfg.kernel,
+            self.cfg.class_weight,
+        )
 
         self._clf.fit(X_train, y_train)
 
-        y_pred  = self._clf.predict(X_test)
+        y_pred = self._clf.predict(X_test)
         y_score = self._clf.decision_function(X_test)
 
         report = classification_report(y_test, y_pred)
-        auc    = roc_auc_score(y_test, y_score)
+        auc = roc_auc_score(y_test, y_score)
 
         log.info("\n%s", report)
         log.info("AUC : %.4f", auc)
