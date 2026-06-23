@@ -1,10 +1,8 @@
-# Projet DSAI : Persuasion, Détection d'IA et Génération Stratégique
+# Projet DSAI : Persuasion, Détection d'IA et Génération d'arguments
 
-Ce dépôt contient le code source de notre projet réalisé dans le cadre de la filière DSAI. Le projet porte sur l'analyse d'arguments (dataset WAC), la détection de textes générés par IA (datasets HC3 & M4GT) et la génération de discours persuasif à l'aide de Modèles de Langage (LLMs).
+Ce dépôt contient le code source de notre projet réalisé dans le cadre de la filière DSAI. Le projet porte sur l'analyse d'arguments (dataset WAC), la détection de textes générés par IA (datasets GRID, HC3 & M4GT) et la génération de discours persuasif à l'aide de Modèles de Langage (LLMs).
 
-Projet supervisé par : M. Tristan JIN.
-
----
+Projet supervisé par Mathieu LABEAU et Pierre FIHEY. 
 
 ## 1. Structure du projet
 
@@ -43,8 +41,6 @@ Projet-DSAI/
 
 ## 2. Installation de l'environnement
 
-Il est recommandé d'utiliser un environnement virtuel (Python 3.10+).
-
 ```bash
 # Création de l'environnement virtuel
 python -m venv env
@@ -58,9 +54,7 @@ source env/bin/activate
 pip install -r requirements.txt
 ```
 
-*(Note : Pour le fine-tuning avec Mistral, une machine disposant d'un GPU compatible CUDA est nécessaire pour utiliser `bitsandbytes` et `peft`)*.
-
-Pour télécharger et formater les datasets requis par le projet, lancez le script utilitaire suivant :
+Pour télécharger et formater les datasets requis :
 ```bash
 python -X utf8 scripts/download_datasets.py --all
 ```
@@ -109,9 +103,38 @@ python generate.py strategy=best_of_n \
 ## 4. Équipe
 
 Projet réalisé par :
-- **Nicolas CASTEL** 
+- **Tristan JIN** 
 - **Wassim SMATI** 
 
-Outils d'organisation : Git/GitHub pour le versioning, Discord pour les réunions, et utilisation des serveurs de l'école (`nodecpu01`, `nodemm01`) pour les calculs lourds.
+Contributions : 
+
+Wassim SMATI: I was responsible for Axis 2 (AI-generated text detection) and Axis
+3 (text generation). I designed the project’s Hydra-based architecture and configuration
+management system, ensuring reproducibility and scalability across experiments. For Axis
+2, I developed and evaluated AI-generated text detectors on the HC3, GriD, and M4GT
+datasets, implemented and compared multiple text representations (TF-IDF, Word2Vec,
+and RoBERTa-based Sentence-Transformers embeddings), and built a RoBERTa fine-
+tuning pipeline using the Hugging Face Trainer API. For Axis 3, I fine-tuned GPT-2 and
+Qwen 2.5 3B models using QLoRA under hardware constraints, and implemented both
+Best-of-N generation and prompt engineering strategies. I also developed interpretability
+tools, including t-SNE and UMAP visualizations to compare generated and human-written
+texts.
+
+• Tristan JIN: I was mainly responsible for Axis 1: searching for papers and the WAC
+dataset; proposing the simplification of Axis 1; exploring the dataset and a first failed
+cleaning attempt. Implementation of the Encoder (W2V, TF-IDF, RoBERTa) + SVM
+method (tested with LogReg initially) with and without OP; implementation of the paper’s
+features and SHAP analysis; implementation of the pairwise method; failed attempt at
+RoBERTa fine-tuning.
+
+• Yanis DAHASSE: In this project, I focused mainly on Axis 1. I handled the cleaning and
+formatting of the CMV dataset, as well as data preparation , train/validation/test splitting
+by post identifier and position bias handling. On the modelling side, I performed the fine-
+tuning of RoBERTa in Cross-Encoder architecture, which constitutes our best result on this
+task, and explored several DeBERTa approaches that did not succeed within the allotted
+time. In parallel, I conducted a literature review of reference works and developed the
+project timeline.
+
+Outils d'organisation : GitHub et utilisation des serveurs gpu de l'école pour les calculs lourds.
 
 
